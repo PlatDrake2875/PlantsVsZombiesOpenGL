@@ -1,5 +1,5 @@
 
-# PvZ Game Structure
+# PvZ Game Structure (WIP)
 
 ## Class Game
   - [Inputs](#inputs)
