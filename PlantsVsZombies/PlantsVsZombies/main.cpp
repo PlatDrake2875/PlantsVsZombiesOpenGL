@@ -1,123 +1,342 @@
-// Codul sursa este adaptat dupa OpenGLBook.com
+﻿//
+// ================================================
+// | Grafica pe calculator                        |
+// ================================================
+// | Laboratorul III - 03_02_animatie.cpp |
+// ============================================
+//
+//	Program ce deseneaza un dreptunghi ce se deplaseaza stanga-dreapta si are un patrat ce orbiteaza in jurul sau, folosindu-se tehnicile MODERN OpenGL;
+//	ELEMENTE DE NOUTATE:
+//	- utilizeaza diverse transformari si compunerea acestora folosind biblioteca glm,
+//	- functii pentru utilizarea mouse-ului;
+//
+//
+//	Biblioteci
 
-#include <windows.h>  // biblioteci care urmeaza sa fie incluse
-#include <stdlib.h> // necesare pentru citirea shader-elor
+#include <iostream>			//	Biblioteca necesara pentru afisarea in consola;
+#include <windows.h>        //	Utilizarea functiilor de sistem Windows (crearea de ferestre, manipularea fisierelor si directoarelor);
+#include <stdlib.h>         //  Biblioteci necesare pentru citirea shaderelor;
 #include <stdio.h>
-#include <GL/glew.h> // glew apare inainte de freeglut
-#include <GL/freeglut.h> // nu trebuie uitat freeglut.h
-#include "loadShaders.h"
+#include <GL/glew.h>        //  Definește prototipurile functiilor OpenGL si constantele necesare pentru programarea OpenGL moderna; 
+#include <GL/freeglut.h>    //	Include functii pentru: 
+							//	- gestionarea ferestrelor si evenimentelor de tastatura si mouse, 
+							//  - desenarea de primitive grafice precum dreptunghiuri, cercuri sau linii, 
+							//  - crearea de meniuri si submeniuri;
+#include "loadShaders.h"	//	Fisierul care face legatura intre program si shadere;
+#include "glm/glm.hpp"		//	Bibloteci utilizate pentru transformari grafice;
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
+using namespace std;
 
-//////////////////////////////////////
-
+//  Identificatorii obiectelor de tip OpenGL;
 GLuint
 VaoId,
 VboId,
 ColorBufferId,
-ProgramId;
+ProgramId,
+myMatrixLocation,
+matrScaleLocation,
+matrTranslLocation,
+matrRotlLocation,
+codColLocation;
+//	Dimensiunile ferestrei de afisare;
+GLfloat
+winWidth = 800, winHeight = 600;
+//	Variabile catre matricile de transformare;
+glm::mat4
+myMatrix, resizeMatrix, matrTransl, matrScale1, matrScale2, matrRot, matrDepl;
+
+//	Variabila ce determina schimbarea culorii pixelilor in shader;
+int codCol;
+//	Variabile pentru proiectia ortogonala;
+float xMin = 0.0f, xMax = 800.0f, yMin = 0.0f, yMax = 600.0f;
+//	Variabile pentru deplasarea pe axa Ox si pentru rotatie;
+float i = 0.0, alpha = 0.0, step = 0.3, beta = 0.002, angle = 0;
 
 
+//	Functie pentru afisarea matricei de transformare;
+void DisplayMatrix()
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+			cout << myMatrix[i][j] << "  ";
+		cout << endl;
+	};
+	cout << "\n";
+};
+
+//	Schimba sensul animatiei spre dreapta;
+void MoveRight(void)
+{
+	i = i + alpha;
+	if (i > 350.0)			//	Se asigura deplasarea stanga-dreapta pe Ox in limitele ecranului,
+		alpha = -step;		//	mai intai efectuandu-se deplasarea spre DREAPTA;
+	else if (i < -350.0)
+		alpha = step;
+	angle = angle - beta;	//	Se actualizeaza unghiul de rotatie constant (mentine orbitarea);
+	glutPostRedisplay();	//	Forteza redesenarea scenei;
+}
+
+//	Schimba sensul animatiei spre stanga;
+void MoveLeft(void)
+{
+	i = i + alpha;
+	if (i < -350.0)			//	Se asigura deplasarea stanga-dreapta pe Ox in limitele ecranului,
+		alpha = step;		//	mai intai efectuandu-se deplasarea spre STANGA;
+	else if (i > 350.0)
+		alpha = -step;
+	angle = angle + beta;	//	Se actualizeaza unghiul de rotatie constant (mentine orbitarea);
+	glutPostRedisplay();	//	Forteza redesenarea scenei;
+}
+
+//	Functie ce modifica deplasarea dreptunghiurilor in functie de apasarea butoanelor de pe mouse;
+void UseMouse(int button, int state, int x, int y)
+{
+	switch (button) {
+	case GLUT_LEFT_BUTTON:			//	CLICK stanga => dreptunghiurile se misca spre stanga;
+		if (state == GLUT_DOWN)
+			alpha = -step;
+		glutIdleFunc(MoveLeft);
+		break;
+	case GLUT_RIGHT_BUTTON:			//	CLICK dreapta => dreptunghiurile se misca spre drepta;
+		if (state == GLUT_DOWN)
+			alpha = step;
+		glutIdleFunc(MoveRight);
+		break;
+	default:
+		break;
+	}
+}
+
+//  Crearea si compilarea obiectelor de tip shader;
+//	Trebuie sa fie in acelasi director cu proiectul actual;
+//  Shaderul de varfuri / Vertex shader - afecteaza geometria scenei;
+//  Shaderul de fragment / Fragment shader - afecteaza culoarea pixelilor;
+void CreateShaders(void)
+{
+	ProgramId = LoadShaders("main.vert", "main.frag");
+	glUseProgram(ProgramId);
+}
+
+//  Se initializeaza un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
+//  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
 void CreateVBO(void)
 {
-	// varfurile 
-	GLfloat Vertices[] = {
-		0.5f,  0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f,  0.5f, 0.0f, 1.0f,
-		0.5f,  0.5f, 0.0f, 1.0f
-	};
 
-	// culorile, ca atribute ale varfurilor
-	GLfloat Colors[] = {
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	};
+	//  Coordonatele varfurilor;
+	GLfloat Vertices[144] = { 0 };
+	//= {
+	//	/*100.f, 25.f, 0.0f, 1.0f,
+	//	200.f, 25.0f, 0.0f, 1.0f,
+	//	200.f, 125.f, 0.0f, 1.0f,
+	//	100.f, 125.0f, 0.0f, 1.0f,*/
 
-	// se creeaza un buffer nou
-	glGenBuffers(1, &VboId);
-	// este setat ca buffer curent
-	glBindBuffer(GL_ARRAY_BUFFER, VboId);
-	// varfurile sunt "copiate" in bufferul curent
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+	//};
 
-	// se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO
-	glGenVertexArrays(1, &VaoId);
+	//  Culorile axelor;
+	GLfloat Colors[144] = { 0 };
+	//= {
+		/*1.0f, 0.0f, 0.0f, 1.0f,
+		0.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 0.0f, 1.0f,*/
+	//};
+
+	const float xBL = 100.f, yBL = 25.f, offset = 25.f;
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			// Coltul stanga jos
+			Vertices[16 * (i * 3 + j)] = xBL + 100 * i + i * offset;
+			Vertices[16 * (i * 3 + j) + 1] = yBL + 100 * j + j * offset;
+			Vertices[16 * (i * 3 + j) + 2] = 0.0f;
+			Vertices[16 * (i * 3 + j) + 3] = 1.0f;
+			
+			// Coltul dreapta jos
+			Vertices[16 * (i * 3 + j) + 4] = xBL + 100 * i + 100 + i * offset;
+			Vertices[16 * (i * 3 + j) + 5] = yBL + 100 * j + j * offset;
+			Vertices[16 * (i * 3 + j) + 6] = 0.0f;
+			Vertices[16 * (i * 3 + j) + 7] = 1.0f;
+
+			// Coltul dreapta sus
+			Vertices[16 * (i * 3 + j) + 8] = xBL + 100 * i + 100 + i * offset;
+			Vertices[16 * (i * 3 + j) + 9] = yBL + 100 * j + 100 + j * offset;
+			Vertices[16 * (i * 3 + j) + 10] = 0.0f;
+			Vertices[16 * (i * 3 + j) + 11] = 1.0f;
+
+			// Coltul stanga sus
+			Vertices[16 * (i * 3 + j) + 12] = xBL + 100 * i + i * offset;
+			Vertices[16 * (i * 3 + j) + 13] = yBL + 100 * j + 100 + j * offset;
+			Vertices[16 * (i * 3 + j) + 14] = 0.0f;
+			Vertices[16 * (i * 3 + j) + 15] = 1.0f;
+		}
+	}
+
+	// Debug la Vertices
+	// for (int i = 0; i < 144; ++i) {
+	// 	if (i % 4 == 0) {
+	// 		cout << '\n';
+	// 	}
+	// 	if (i % 16 == 0) {
+	// 		cout << '\n';
+	// 	}
+	// 	cout << Vertices[i] << ' ';
+	// }
+
+	//  Transmiterea datelor prin buffere;
+
+	//  Se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO;
+	glGenVertexArrays(1, &VaoId);                                                   //  Generarea VAO si indexarea acestuia catre variabila VaoId;
 	glBindVertexArray(VaoId);
-	// se activeaza lucrul cu atribute; atributul 0 = pozitie
+
+	//  Se creeaza un buffer pentru VARFURI;
+	glGenBuffers(1, &VboId);                                                        //  Generarea bufferului si indexarea acestuia catre variabila VboId;
+	glBindBuffer(GL_ARRAY_BUFFER, VboId);                                           //  Setarea tipului de buffer - atributele varfurilor;
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);      //  Punctele sunt "copiate" in bufferul curent;
+	//  Se asociaza atributul (0 = coordonate) pentru shader;
 	glEnableVertexAttribArray(0);
-	// 
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
-	// un nou buffer, pentru culoare
+	//  Se creeaza un buffer pentru CULOARE;
 	glGenBuffers(1, &ColorBufferId);
 	glBindBuffer(GL_ARRAY_BUFFER, ColorBufferId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
-	// atributul 1 =  culoare
+	//  Se asociaza atributul (1 =  culoare) pentru shader;
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 }
-void DestroyVBO(void)
-{
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &ColorBufferId);
-	glDeleteBuffers(1, &VboId);
-
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &VaoId);
-}
-
-void CreateShaders(void)
-{
-	ProgramId = LoadShaders("example.vert", "example.frag");
-	glUseProgram(ProgramId);
-}
+//  Elimina obiectele de tip shader dupa rulare;
 void DestroyShaders(void)
 {
 	glDeleteProgram(ProgramId);
 }
 
-void Initialize(void)
+//  Eliminarea obiectelor de tip VBO dupa rulare;
+void DestroyVBO(void)
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // culoarea de fond a ecranului
-	CreateVBO();
-	CreateShaders();
-}
-void RenderFunction(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT);       
+	//  Eliberarea atributelor din shadere (pozitie, culoare, texturare etc.);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
 
-	// Functiile de desenare
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glDrawArrays(GL_TRIANGLES, 3, 3);
+	//  Stergerea bufferelor pentru varfuri, culori;
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &ColorBufferId);
+	glDeleteBuffers(1, &VboId);
 
-	glFlush();
+	//  Eliberaea obiectelor de tip VAO;
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &VaoId);
 }
+
+//  Functia de eliberare a resurselor alocate de program;
 void Cleanup(void)
 {
 	DestroyShaders();
 	DestroyVBO();
 }
 
+//  Setarea parametrilor necesari pentru fereastra de vizualizare;
+void Initialize(void)
+{
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);		//  Culoarea de fond a ecranului;
+	CreateVBO();								//  Trecerea datelor de randare spre bufferul folosit de shadere;
+	CreateShaders();							//  Initilizarea shaderelor;
+	//	Instantierea variabilelor uniforme pentru a "comunica" cu shaderele;
+	codColLocation = glGetUniformLocation(ProgramId, "codCol");
+	myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
+}
+
+//  Functia de desenarea a graficii pe ecran;
+void RenderFunction(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
+
+	// TO DO: schimbati transformarile (de exemplu deplasarea are loc pe axa Oy sau pe o alta dreapta);
+	resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);							//	"Aducem" scena la "patratul standard" [-1,1]x[-1,1];
+	matrTransl = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0, 0.0));		//	Se translateaza de-a lungul axei Ox;
+	matrDepl = glm::translate(glm::mat4(1.0f), glm::vec3(0, 80.0, 0.0));		//	Se translateaza patratul ROSU fata de patratul ALBASTRU;
+	matrScale1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.1, 0.3, 0.0));			//	Se scaleaza coordonatele initiale si se obtine dreptunghiul ALABSTRU;
+	matrScale2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.0));		//	Se scaleaza coordonatele initiale si se obtine patratul ROSU;
+	matrRot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0, 0.0, 1.0));	//	Roatie folosita la deplasarea patratului ROSU;
+
+	myMatrix = resizeMatrix;
+	codCol = 1;
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, codCol);
+	
+	for (int i = 0; i < 9; ++i) {
+		glDrawArrays(GL_POLYGON, 4 * i, 4);
+	}
+
+
+	////	Desenarea axelor;
+
+	////	Matricea de redimensionare (pentru elementele "fixe" - axele);
+	//myMatrix = resizeMatrix;
+	////	Culoarea;
+	//codCol = 0;
+	////	Transmiterea variabilelor uniforme pentru MATRICE DE TRANSFORMARE si COLORARE spre shadere;
+	//glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	//glUniform1i(codColLocation, codCol);
+	////  Functia de desenare primeste 3 argumente:
+	////  - arg1 = tipul primitivei desenate,
+	////  - arg2 = indicele primului punct de desenat din buffer,
+	////  - arg3 = numarul de puncte consecutive de desenat;
+	//glDrawArrays(GL_LINES, 0, 4);
+
+	////	Desenarea dreptunghiului ALBASTRU;
+
+	////	Matricea de transformare pentru dreptunghiul ALBASTRU; 
+	//myMatrix = resizeMatrix * matrTransl * matrScale1;
+	//codCol = 1;
+	////	Transmiterea variabilelor uniforme pentru MATRICEA DE TRANSFORMARE si COLORARE spre shadere;
+	//glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	//glUniform1i(codColLocation, codCol);
+	//glDrawArrays(GL_POLYGON, 4, 4);
+
+	////	Desenarea dreptunghiului ROSU;
+
+	////	Matricea de transformare pentru dreptunghiul ROSU; 
+	//myMatrix = resizeMatrix * matrTransl * matrRot * matrDepl * matrScale2;
+	//codCol = 2;
+	////	Transmiterea variabilelor uniforme pentru MATRICE DE TRANSFORMARE si COLORARE spre shadere;
+	//glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	//glUniform1i(codColLocation, codCol);
+	//glDrawArrays(GL_POLYGON, 4, 4);
+
+	glutSwapBuffers();	//	Inlocuieste imaginea deseneata in fereastra cu cea randata; 
+	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
+}
+
+//	Punctul de intrare in program, se ruleaza rutina OpenGL;
 int main(int argc, char* argv[])
 {
+	//  Se initializeaza GLUT si contextul OpenGL si se configureaza fereastra si modul de afisare;
+
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowPosition(100, 100); // pozitia initiala a ferestrei
-	glutInitWindowSize(600, 600); //dimensiunile ferestrei
-	glutCreateWindow("Grafica pe calculator - primul exemplu"); // titlul ferestrei
-	glewInit(); // nu uitati de initializare glew; trebuie initializat inainte de a a initializa desenarea
-	Initialize();
-	glutDisplayFunc(RenderFunction);
-	glutCloseFunc(Cleanup);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);					//	Se folosesc 2 buffere (unul pentru afisare si unul pentru randare => animatii cursive) si culori RGB;
+	glutInitWindowPosition(100, 100);								//  Pozitia initiala a ferestrei;
+	glutInitWindowSize(winWidth, winHeight);									//  Dimensiunea ferestrei;
+	glutCreateWindow("Dreptunghi cu satelit - OpenGL <<nou>>");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
+
+	//	Se initializeaza GLEW si se verifica suportul de extensii OpenGL modern disponibile pe sistemul gazda;
+	//  Trebuie initializat inainte de desenare;
+
+	glewInit();
+
+	Initialize();						//  Setarea parametrilor necesari pentru fereastra de vizualizare; 
+	glutDisplayFunc(RenderFunction);	//  Desenarea scenei in fereastra;
+	glutMouseFunc(UseMouse);			//	Activarea utilizarii mouseului;
+	glutCloseFunc(Cleanup);				//  Eliberarea resurselor alocate de program;
+
+	//  Bucla principala de procesare a evenimentelor GLUT (functiile care incep cu glut: glutInit etc.) este pornita;
+	//  Prelucreaza evenimentele si deseneaza fereastra OpenGL pana cand utilizatorul o inchide;
+
 	glutMainLoop();
+
+	return 0;
 }
 
