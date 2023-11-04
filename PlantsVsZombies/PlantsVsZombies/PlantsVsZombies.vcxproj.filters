@@ -1479,5 +1479,11 @@
     <None Include="lib\x64\GL\DLLs\glew32.dll">
       <Filter>Resource Files\template-built-ins\DLLs\64b</Filter>
     </None>
+    <None Include="main.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="main.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
