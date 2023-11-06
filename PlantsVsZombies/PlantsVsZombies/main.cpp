@@ -27,6 +27,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "Shared.h"
+#include "Plant.h"
 
 using namespace std;
 
@@ -35,18 +37,14 @@ GLuint
 VaoId,
 VboId,
 ColorBufferId,
-ProgramId,
-myMatrixLocation,
-matrScaleLocation,
-matrTranslLocation,
-matrRotlLocation,
-codColLocation;
+ProgramId;
 //	Dimensiunile ferestrei de afisare;
 GLfloat
 winWidth = 1000, winHeight = 600;
 //	Variabile catre matricile de transformare;
-glm::mat4
-myMatrix, resizeMatrix, matrTransl, matrScale1, matrScale2, matrScale3, matrRot, matrDepl;
+glm::mat4 myMatrix;
+
+const int NMax = 100000;
 
 //	Variabila ce determina schimbarea culorii pixelilor in shader;
 int codCol;
@@ -223,7 +221,8 @@ void CreateVBO(void)
 {
 
 	//  Coordonatele varfurilor;
-	GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
+	//GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
+	GLfloat Vertices[NMax] = { 0 };
 
 	// Culorile axelor
 	GLfloat Colors[16] = { 
@@ -358,7 +357,7 @@ void CreateVBO(void)
 	plant(Vertices, poz, 475.f, 475.f);
 
 	// stelele - pretul plantelor
-	GLfloat width_stars = 25.0f;
+	GLfloat width_stars = 25.0f;	
 	GLfloat y_stars = 450.f;
 	star(Vertices, poz, 100.f, y_stars);
 
@@ -380,8 +379,11 @@ void CreateVBO(void)
 	for (int i = 0; i < 6;i++)
 		star(Vertices, poz, x_stars + width_stars * i, y_stars);
 
-	
-	//  Transmiterea datelor prin buffere;
+	// Asezarea obiectelor dinamice in Vertices si Indices
+	// Planta generica - 7 puncte
+	Plant::offset = (poz + 1) / 4;
+	plant(Vertices, poz, -50.f, -50.f); // planta centrata in (0, 0) ca sa o pot pune unde vreau din translatii
+
 
 	//  Se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO;
 	glGenVertexArrays(1, &VaoId);                                                   //  Generarea VAO si indexarea acestuia catre variabila VaoId;
@@ -437,12 +439,12 @@ void Cleanup(void)
 //  Setarea parametrilor necesari pentru fereastra de vizualizare;
 void Initialize(void)
 {
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);		//  Culoarea de fond a ecranului;
+	glClearColor(0.23f, 0.23f, 0.23f, 0.0f);		//  Culoarea de fond a ecranului;
 	CreateVBO();								//  Trecerea datelor de randare spre bufferul folosit de shadere;
 	CreateShaders();							//  Initilizarea shaderelor;
 	//	Instantierea variabilelor uniforme pentru a "comunica" cu shaderele;
-	codColLocation = glGetUniformLocation(ProgramId, "codCol");
-	myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
+	Shared::codColLocation = glGetUniformLocation(ProgramId, "codCol");
+	Shared::myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
 }
 
 //  Functia de desenarea a graficii pe ecran;
@@ -451,54 +453,68 @@ void RenderFunction(void)
 	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
 
 	// TO DO: schimbati transformarile (de exemplu deplasarea are loc pe axa Oy sau pe o alta dreapta);
-	resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);							//	"Aducem" scena la "patratul standard" [-1,1]x[-1,1];
-	matrTransl = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0, 0.0));		//	Se translateaza de-a lungul axei Ox;
-	matrDepl = glm::translate(glm::mat4(1.0f), glm::vec3(0, 80.0, 0.0));		//	Se translateaza patratul ROSU fata de patratul ALBASTRU;
-	matrScale1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.1, 0.3, 0.0));			//	Se scaleaza coordonatele initiale si se obtine dreptunghiul ALABSTRU;
-	matrScale2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.0));		//	Se scaleaza coordonatele initiale si se obtine patratul ROSU;
-	matrRot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0, 0.0, 1.0));	//	Roatie folosita la deplasarea patratului ROSU;
+	Shared::resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);							//	"Aducem" scena la "patratul standard" [-1,1]x[-1,1];
+	//matrTransl = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0, 0.0));		//	Se translateaza de-a lungul axei Ox;
+	//matrDepl = glm::translate(glm::mat4(1.0f), glm::vec3(0, 80.0, 0.0));		//	Se translateaza patratul ROSU fata de patratul ALBASTRU;
+	//matrScale1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.1, 0.3, 0.0));			//	Se scaleaza coordonatele initiale si se obtine dreptunghiul ALABSTRU;
+	//matrScale2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.0));		//	Se scaleaza coordonatele initiale si se obtine patratul ROSU;
+	//matrRot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0, 0.0, 1.0));	//	Roatie folosita la deplasarea patratului ROSU;
 
-	matrScale3 = glm::scale(glm::mat4(1.0f), glm::vec3(3.0, 3.0, 0.0));	
+	//matrScale3 = glm::scale(glm::mat4(1.0f), glm::vec3(3.0, 3.0, 0.0));	
 	// construieste o scalare care dubleaza dimensiunea obiectului
 
 
 
-	myMatrix = resizeMatrix;
-	codCol = 1;
-	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	
+	myMatrix = Shared::resizeMatrix;
+	codCol = FIELD_GREEN;
+	glUniformMatrix4fv(Shared::myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(Shared::codColLocation, codCol);
+
+	// Desenam cele 9 "campuri" in care vor fi plasate plantele
 	for (int i = 0; i < 9; ++i) {
 		glDrawArrays(GL_POLYGON, 4 * i, 4);
 	}
 
 	// desenam baza
-	codCol = 2;
-	glUniform1i(codColLocation, codCol);
+	codCol = RED;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 36, 4);
 
 	// desenam kenarele pentru plante
-	codCol = 0;
-	glUniform1i(codColLocation, codCol);
+	codCol = WHITE;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_LINE_LOOP, 40, 4);
 	glDrawArrays(GL_LINE_LOOP, 44, 4);
 	glDrawArrays(GL_LINE_LOOP, 48, 4);
 	glDrawArrays(GL_LINE_LOOP, 52, 4);
 
 	// desenam vietile
-	codCol = 2;
-	glUniform1i(codColLocation, codCol);
+	codCol = RED;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 56, 4);
 	glDrawArrays(GL_POLYGON, 60, 4);
 	glDrawArrays(GL_POLYGON, 64, 4);
 
-	// desenam plantele
+	// desenam plantele din chenare
+	codCol = MAGENTA;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 68, 7);
+
+	codCol = YELLOW;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 75, 7);
+
+	codCol = CYAN;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 82, 7);
+
+	codCol = ORANGE;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 89, 7);
 
 	// desenam stelele - pretul plantelor
+	codCol = LIGHT_GRAY;
+	glUniform1i(Shared::codColLocation, codCol);
 	int poz = 96;
 	for (int i=0; i<10;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
@@ -507,6 +523,14 @@ void RenderFunction(void)
 	poz = 196;
 	for (int i = 0; i < 6;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
+
+	// Test Plant spawn
+	Plant p1(YELLOW, 100.f, 100.f);
+	Plant p2(CYAN, 225.f, 100.f);
+	Plant p3(ORANGE, 350.f, 100.f);
+	p1.draw(); 
+	p2.draw();
+	p3.draw();
 
 	////	Desenarea axelor;
 
@@ -556,7 +580,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);					//	Se folosesc 2 buffere (unul pentru afisare si unul pentru randare => animatii cursive) si culori RGB;
 	glutInitWindowPosition(100, 100);								//  Pozitia initiala a ferestrei;
 	glutInitWindowSize(winWidth, winHeight);									//  Dimensiunea ferestrei;
-	glutCreateWindow("Dreptunghi cu satelit - OpenGL <<nou>>");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
+	glutCreateWindow("Plants Vs Zombies OpenGL");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
 
 	//	Se initializeaza GLEW si se verifica suportul de extensii OpenGL modern disponibile pe sistemul gazda;
 	//  Trebuie initializat inainte de desenare;
