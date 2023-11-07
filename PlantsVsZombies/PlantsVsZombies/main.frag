@@ -20,6 +20,7 @@
 #define CYAN 9
 #define ORANGE 10
 #define LIGHT_GRAY 11
+#define DARK_GREEN 12
 
 //	Variabile de intrare (dinspre Shader.vert);
 in vec4 ex_Color;
@@ -67,6 +68,9 @@ void main(void)
 		break;
 	case LIGHT_GRAY:
 		out_Color = vec4 (0.7, 0.7, 0.7, 1.0);
+		break;
+	case DARK_GREEN:
+		out_Color = vec4(0.004, 0.388, 0.063, 1.0);
 		break;
 	default:
 		break;

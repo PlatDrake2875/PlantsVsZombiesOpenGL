@@ -1,19 +1,4 @@
-﻿//
-// ================================================
-// | Grafica pe calculator                        |
-// ================================================
-// | Laboratorul III - 03_02_animatie.cpp |
-// ============================================
-//
-//	Program ce deseneaza un dreptunghi ce se deplaseaza stanga-dreapta si are un patrat ce orbiteaza in jurul sau, folosindu-se tehnicile MODERN OpenGL;
-//	ELEMENTE DE NOUTATE:
-//	- utilizeaza diverse transformari si compunerea acestora folosind biblioteca glm,
-//	- functii pentru utilizarea mouse-ului;
-//
-//
-//	Biblioteci
-
-#include <iostream>			//	Biblioteca necesara pentru afisarea in consola;
+﻿#include <iostream>			//	Biblioteca necesara pentru afisarea in consola;
 #include <windows.h>        //	Utilizarea functiilor de sistem Windows (crearea de ferestre, manipularea fisierelor si directoarelor);
 #include <stdlib.h>         //  Biblioteci necesare pentru citirea shaderelor;
 #include <stdio.h>
@@ -29,6 +14,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Shared.h"
 #include "Plant.h"
+
 
 using namespace std;
 
@@ -90,20 +76,39 @@ void MoveLeft(void)
 	glutPostRedisplay();	//	Forteza redesenarea scenei;
 }
 
+void moveAll() {
+	// move all the zombies
+	auto it = Shared::zombies.begin();
+	while (it != Shared::zombies.end()) {
+		(*it)->move();
+		//std::cout << (*it)->getPosition().y << '\n';
+		if ((*it)->getPosition().x <= 50.f) {
+			delete *it;
+			it = Shared::zombies.erase(it);
+		}
+			
+		else
+			++it;
+	}
+		
+	// TODO: do the same for the bullets
+
+	glutPostRedisplay();
+}
+
+void drawAll() {
+	for(auto zombie: Shared::zombies)
+		zombie->draw();
+}
+
 //	Functie ce modifica deplasarea dreptunghiurilor in functie de apasarea butoanelor de pe mouse;
 void UseMouse(int button, int state, int x, int y)
 {
 	switch (button) {
 	case GLUT_LEFT_BUTTON:			//	CLICK stanga => dreptunghiurile se misca spre stanga;
-		if (state == GLUT_DOWN)
-			alpha = -step;
-		glutIdleFunc(MoveLeft);
-		break;
-	case GLUT_RIGHT_BUTTON:			//	CLICK dreapta => dreptunghiurile se misca spre drepta;
-		if (state == GLUT_DOWN)
-			alpha = step;
-		glutIdleFunc(MoveRight);
-		break;
+		if (state == GLUT_DOWN) {
+			// do something when left click is pressed
+		}
 	default:
 		break;
 	}
@@ -156,6 +161,31 @@ void plant(GLfloat Vertices[], int &poz,  float x, float y) {
 	Vertices[++poz] = y + 100.f;
 	Vertices[++poz] = 0.0f;
 	Vertices[++poz] = 1.0f;
+}
+
+// Punem in Vertices punctele care deseneaza un zombie centrat in (0, 0) (mai intai partea exterioara, apoi cea interioara)
+void zombie(GLfloat Vertices[], int& poz, float rBig = 40.f, float rSmall = 25.f) {
+	const int n = 6;
+
+	// Punctele pentru exterior
+	for (int k = 0; k < n; ++k) {
+		float angle = 2 * k * Shared::PI / n;
+		GLfloat x = rBig * cos(angle), y = rBig * sin(angle);
+		Vertices[++poz] = x;
+		Vertices[++poz] = y;
+		Vertices[++poz] = 0.0f;
+		Vertices[++poz] = 1.0f;
+	}
+	
+	// Punctele pentru interior
+	for (int k = 0; k < n; ++k) {
+		float angle = 2 * k * Shared::PI / n;
+		GLfloat x = rSmall * cos(angle), y = rSmall * sin(angle);
+		Vertices[++poz] = x;
+		Vertices[++poz] = y;
+		Vertices[++poz] = 1.0f; // 1.0f pentru a fi desenat deasupra
+		Vertices[++poz] = 1.0f;
+	}
 }
 
 // Desenam o stea cu 5 colturi
@@ -219,9 +249,8 @@ void star(GLfloat Vertices[], int &poz, GLfloat x, GLfloat y, GLfloat scale = 2.
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
 void CreateVBO(void)
 {
-
 	//  Coordonatele varfurilor;
-	//GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
+	// GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
 	GLfloat Vertices[NMax] = { 0 };
 
 	// Culorile axelor
@@ -379,10 +408,14 @@ void CreateVBO(void)
 	for (int i = 0; i < 6;i++)
 		star(Vertices, poz, x_stars + width_stars * i, y_stars);
 
-	// Asezarea obiectelor dinamice in Vertices si Indices
+	// Asezarea obiectelor dinamice in Vertices
 	// Planta generica - 7 puncte
-	Plant::offset = (poz + 1) / 4;
+	Plant::setOffset((poz + 1) / 4);
 	plant(Vertices, poz, -50.f, -50.f); // planta centrata in (0, 0) ca sa o pot pune unde vreau din translatii
+
+	// Zombie - 12 puncte (mai intai partea exterioara, apoi cea interioara
+	Zombie::setOffset((poz + 1) / 4);
+	zombie(Vertices, poz);
 
 
 	//  Se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO;
@@ -525,12 +558,19 @@ void RenderFunction(void)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
 
 	// Test Plant spawn
-	Plant p1(YELLOW, 100.f, 100.f);
-	Plant p2(CYAN, 225.f, 100.f);
-	Plant p3(ORANGE, 350.f, 100.f);
+	Plant p1(YELLOW, 150.f, 75.f);
+	Plant p2(CYAN, 275.f, 200.f);
+	Plant p3(ORANGE, 400.f, 325.f);
+	Plant p4(MAGENTA, 400.f, 75.f);
 	p1.draw(); 
 	p2.draw();
 	p3.draw();
+	p4.draw();
+
+	// Test Zombie spawn
+	//Zombie z1(YELLOW, 500.f, 75.f);
+	//z1.draw();
+	drawAll();
 
 	////	Desenarea axelor;
 
@@ -588,7 +628,14 @@ int main(int argc, char* argv[])
 	glewInit();
 
 	Initialize();						//  Setarea parametrilor necesari pentru fereastra de vizualizare; 
+
+	// TESTING PURPOSES
+	Zombie* z = new Zombie(YELLOW, 1100.f, 75.f);
+	Shared::zombies.push_back(z);
+
+
 	glutDisplayFunc(RenderFunction);	//  Desenarea scenei in fereastra;
+	glutIdleFunc(moveAll);
 	glutMouseFunc(UseMouse);			//	Activarea utilizarii mouseului;
 	glutCloseFunc(Cleanup);				//  Eliberarea resurselor alocate de program;
 
