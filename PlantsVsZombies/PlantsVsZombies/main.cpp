@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <GL/glew.h>        //  Definește prototipurile functiilor OpenGL si constantele necesare pentru programarea OpenGL moderna; 
 #include <GL/freeglut.h>    //	Include functii pentru: 
-							//	- gestionarea ferestrelor si evenimentelor de tastatura si mouse, 
-							//  - desenarea de primitive grafice precum dreptunghiuri, cercuri sau linii, 
-							//  - crearea de meniuri si submeniuri;
+//	- gestionarea ferestrelor si evenimentelor de tastatura si mouse, 
+//  - desenarea de primitive grafice precum dreptunghiuri, cercuri sau linii, 
+//  - crearea de meniuri si submeniuri;
 #include "loadShaders.h"	//	Fisierul care face legatura intre program si shadere;
 #include "glm/glm.hpp"		//	Bibloteci utilizate pentru transformari grafice;
 #include "glm/gtc/matrix_transform.hpp"
@@ -14,6 +14,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Shared.h"
 #include "Plant.h"
+#include "Collisions.h"
 
 
 using namespace std;
@@ -36,7 +37,7 @@ int codCol;
 float xMin = 0.0f, xMax = 1000.0f, yMin = 0.0f, yMax = 600.0f;
 //	Variabile pentru deplasarea pe axa Ox si pentru rotatie;
 float i = 0.0, alpha = 0.0, step = 0.3, beta = 0.002, angle = 0;
-
+Collisions collision_handler;
 
 //	Functie pentru afisarea matricei de transformare;
 void DisplayMatrix()
@@ -81,32 +82,32 @@ void moveAll() {
 		(*it)->move();
 		//std::cout << (*it)->getPosition().y << '\n';
 		if (!(*it)->isActive()) {
-			delete *it;
+			delete* it;
 			it = Shared::zombies.erase(it);
-		}	
+		}
 		else
 			++it;
 	}
-		
+
 	auto it1 = Shared::bullets.begin();
 	while (it1 != Shared::bullets.end()) {
 		(*it1)->move();
 		if (!(*it1)->isActive()) {
-			delete *it1;
+			delete* it1;
 			it1 = Shared::bullets.erase(it1);
 		}
 		else
 			++it1;
-	}	
+	}
 
 	glutPostRedisplay();
 }
 
 void drawAll() {
-	for(auto zombie: Shared::zombies)
+	for (auto zombie : Shared::zombies)
 		zombie->draw();
-	
-	for(auto bullet: Shared::bullets)
+
+	for (auto bullet : Shared::bullets)
 		bullet->draw();
 }
 
@@ -135,7 +136,7 @@ void CreateShaders(void)
 
 // Desenam o planta
 // x, y - coordonatele stanga jos ale chenarului in care se va desena planta
-void plant(GLfloat Vertices[], int &poz,  float x, float y) {
+void plant(GLfloat Vertices[], int& poz, float x, float y) {
 	Vertices[++poz] = x + 25.f;
 	Vertices[++poz] = y + 50.f;
 	Vertices[++poz] = 0.0f;
@@ -185,7 +186,7 @@ void zombie(GLfloat Vertices[], int& poz, float rBig = 40.f, float rSmall = 25.f
 		Vertices[++poz] = 0.0f;
 		Vertices[++poz] = 1.0f;
 	}
-	
+
 	// Punctele pentru interior
 	for (int k = 0; k < n; ++k) {
 		float angle = 2 * k * Shared::PI / n;
@@ -200,7 +201,7 @@ void zombie(GLfloat Vertices[], int& poz, float rBig = 40.f, float rSmall = 25.f
 // Desenam o stea cu 5 colturi
 // x, y - coordonatele stanga jos ale chenarului in care se va desena steaua
 // actualizam pozitia in vectorul Vertices
-void star(GLfloat Vertices[], int &poz, GLfloat x, GLfloat y, GLfloat scale = 2.2f) {
+void star(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 2.2f) {
 	Vertices[++poz] = x + 6.f * scale;
 	Vertices[++poz] = y + 3.f * scale;
 	Vertices[++poz] = 0.0f;
@@ -254,7 +255,63 @@ void star(GLfloat Vertices[], int &poz, GLfloat x, GLfloat y, GLfloat scale = 2.
 }
 
 
-//  Se initializeaza un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
+void square(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 1.0f)
+{
+	// Coltul stanga jos
+	Vertices[++poz] = x;
+	Vertices[++poz] = y;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	// Coltul dreapta jos
+	Vertices[++poz] = x + 100.0f * scale;
+	Vertices[++poz] = y;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	// Coltul dreapta sus
+	Vertices[++poz] = x + 100.0f * scale;
+	Vertices[++poz] = y + 100.0f * scale;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	// Coltul stanga sus
+	Vertices[++poz] = x;
+	Vertices[++poz] = y + 100.0f * scale;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+}
+
+void rectangle(GLfloat Vertices[], int& poz)
+{
+
+	// Coltul stanga jos
+	Vertices[++poz] = 20.0f;
+	Vertices[++poz] = 25.0f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	//// Coltul dreapta jos
+	Vertices[++poz] = 80.0f;
+	Vertices[++poz] = 25.0f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	//// Coltul dreapta sus
+	Vertices[++poz] = 80.0f;
+	Vertices[++poz] = 375.0f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	//// Coltul stanga sus
+	Vertices[++poz] = 20.0f;
+	Vertices[++poz] = 375.0f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+}
+
+//  Se initializeaza
+//  un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
 void CreateVBO(void)
 {
@@ -263,139 +320,43 @@ void CreateVBO(void)
 	GLfloat Vertices[NMax] = { 0 };
 
 	// Culorile axelor
-	GLfloat Colors[16] = { 
+	GLfloat Colors[16] = {
 		0.0f, 0.0f, 0.0f, 1.0f,	// Negru
 		1.0f, 0.0f, 0.0f, 1.0f,	// Rosu
 		0.0f, 1.0f, 0.0f, 1.0f,	// Verde
 		0.0f, 0.0f, 1.0f, 1.0f	// Albastru
 	};
 
-	// Adaugam cele 9 patrate
-	float xBL = 100.f, yBL = 25.f, offset = 25.f;
+	int poz = -1;
+
+	float xBL = 100.0f, yBL = 25.0f, offset = 25.0f;
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
-			// Coltul stanga jos
-			Vertices[16 * (i * 3 + j)] = xBL + 100 * i + i * offset;
-			Vertices[16 * (i * 3 + j) + 1] = yBL + 100 * j + j * offset;
-			Vertices[16 * (i * 3 + j) + 2] = 0.0f;
-			Vertices[16 * (i * 3 + j) + 3] = 1.0f;
-			
-			// Coltul dreapta jos
-			Vertices[16 * (i * 3 + j) + 4] = xBL + 100 * i + 100 + i * offset;
-			Vertices[16 * (i * 3 + j) + 5] = yBL + 100 * j + j * offset;
-			Vertices[16 * (i * 3 + j) + 6] = 0.0f;
-			Vertices[16 * (i * 3 + j) + 7] = 1.0f;
-
-			// Coltul dreapta sus
-			Vertices[16 * (i * 3 + j) + 8] = xBL + 100 * i + 100 + i * offset;
-			Vertices[16 * (i * 3 + j) + 9] = yBL + 100 * j + 100 + j * offset;
-			Vertices[16 * (i * 3 + j) + 10] = 0.0f;
-			Vertices[16 * (i * 3 + j) + 11] = 1.0f;
-
-			// Coltul stanga sus
-			Vertices[16 * (i * 3 + j) + 12] = xBL + 100 * i + i * offset;
-			Vertices[16 * (i * 3 + j) + 13] = yBL + 100 * j + 100 + j * offset;
-			Vertices[16 * (i * 3 + j) + 14] = 0.0f;
-			Vertices[16 * (i * 3 + j) + 15] = 1.0f;
+			square(Vertices, poz, xBL + i * (100 + offset), yBL + j * (100 + offset));
 		}
 	}
 
-	// Dreptungiul 'bazei'
-	int poz = 144;
-	// Coltul stanga jos
-	Vertices[poz] = 20.0f;
-	Vertices[poz + 1] = 25.0f;
-	Vertices[poz + 2] = 0.0f;
-	Vertices[poz + 3] = 1.0f;
+	rectangle(Vertices, poz);
 
-	// Coltul dreapta jos
-	Vertices[poz + 4] = 80.0f;
-	Vertices[poz + 5] = 25.0f;
-	Vertices[poz + 6] = 0.0f;
-	Vertices[poz + 7] = 1.0f;
-
-	// Coltul dreapta sus
-	Vertices[poz + 8] = 80.0f;
-	Vertices[poz + 9] = 375.0f;
-	Vertices[poz + 10] = 0.0f;
-	Vertices[poz + 11] = 1.0f;
-
-	// Coltul stanga sus
-	Vertices[poz + 12] = 20.0f;
-	Vertices[poz + 13] = 375.0f;
-	Vertices[poz + 14] = 0.0f;
-	Vertices[poz + 15] = 1.0f;
-	
 	// Kenarele pentru plante
-	poz += 16;
-	for (int i = 0;i < 4;i++)
-	{
-		// stanga jos
-		Vertices[poz + 16 * i] = xBL + 100 * i + i * offset;
-		Vertices[poz + 16 * i + 1] = 475.f;
-		Vertices[poz + 16 * i + 2] = 0.0f;
-		Vertices[poz + 16 * i + 3] = 1.0f;
-
-		// dreapta jos
-		Vertices[poz + 16 * i + 4] = xBL + 100 * i + 100 + i * offset;
-		Vertices[poz + 16 * i + 5] = 475.f;
-		Vertices[poz + 16 * i + 6] = 0.0f;
-		Vertices[poz + 16 * i + 7] = 1.0f;
-
-		// dreapta sus
-		Vertices[poz + 16 * i + 8] = xBL + 100 * i + 100 + i * offset;
-		Vertices[poz + 16 * i + 9] = 575.f;
-		Vertices[poz + 16 * i + 10] = 0.0f;
-		Vertices[poz + 16 * i + 11] = 1.0f;
-
-		// stanga sus
-		Vertices[poz + 16 * i + 12] = xBL + 100 * i + i * offset;
-		Vertices[poz + 16 * i + 13] = 575.f;
-		Vertices[poz + 16 * i + 14] = 0.0f;
-		Vertices[poz + 16 * i + 15] = 1.0f;
-
+	yBL = 475.f;
+	for (int i = 0; i < 4;i++) {
+		square(Vertices, poz, xBL + i * (100 + offset), yBL);
 	}
 
 	// Patratele pentru vieti
-	poz += 64;
 	offset = 25.f;
-	for (int i = 0; i < 3; i++)
-	{
-		// stanga jos
-		Vertices[poz + 16 * i] = 25.f + 50 * i + i * offset + 600;
-		Vertices[poz + 16 * i + 1] = 500.f;
-		Vertices[poz + 16 * i + 2] = 0.0f;
-		Vertices[poz + 16 * i + 3] = 1.0f;
-
-		// dreapta jos
-		Vertices[poz + 16 * i + 4] = 75.f + 50 * i + i * offset + 600;
-		Vertices[poz + 16 * i + 5] = 500.f;
-		Vertices[poz + 16 * i + 6] = 0.0f;
-		Vertices[poz + 16 * i + 7] = 1.0f;
-
-		// dreapta sus
-		Vertices[poz + 16 * i + 8] = 75.f + 50 * i + i * offset + 600;
-		Vertices[poz + 16 * i + 9] = 550.f;
-		Vertices[poz + 16 * i + 10] = 0.0f;
-		Vertices[poz + 16 * i + 11] = 1.0f;
-
-		// stanga sus
-		Vertices[poz + 16 * i + 12] = 25.f + 50 * i + i * offset + 600;
-		Vertices[poz + 16 * i + 13] = 550.f;
-		Vertices[poz + 16 * i + 14] = 0.0f;
-		Vertices[poz + 16 * i + 15] = 1.0f;	
+	for (int i = 0; i < 3; i++) {
+		square(Vertices, poz, 625.0f + i * (50 + offset), 500.0f, 0.5f);
 	}
 
-	// plantele
-	poz += 48;
-	poz -= 1;
 	plant(Vertices, poz, 100.f, 475.f);
 	plant(Vertices, poz, 225.f, 475.f);
 	plant(Vertices, poz, 350.f, 475.f);
 	plant(Vertices, poz, 475.f, 475.f);
 
 	// stelele - pretul plantelor
-	GLfloat width_stars = 25.0f;	
+	GLfloat width_stars = 25.0f;
 	GLfloat y_stars = 450.f;
 	star(Vertices, poz, 100.f, y_stars);
 
@@ -498,7 +459,7 @@ void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
 
-	Shared::resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);	
+	Shared::resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);
 
 	myMatrix = Shared::resizeMatrix;
 	codCol = FIELD_GREEN;
@@ -551,7 +512,7 @@ void RenderFunction(void)
 	codCol = LIGHT_GRAY;
 	glUniform1i(Shared::codColLocation, codCol);
 	int poz = 96;
-	for (int i=0; i<10;i++)
+	for (int i = 0; i < 10;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
 
 	// desenam stelele - banii acumulati
@@ -564,7 +525,8 @@ void RenderFunction(void)
 	Plant p2(CYAN, 275.f, 200.f);
 	Plant p3(ORANGE, 400.f, 325.f);
 	Plant p4(MAGENTA, 400.f, 75.f);
-	p1.draw(); 
+
+	p1.draw();
 	p2.draw();
 	p3.draw();
 	p4.draw();
@@ -575,42 +537,9 @@ void RenderFunction(void)
 	// Test Zombie spawn
 	//Zombie z1(YELLOW, 500.f, 75.f);
 	//z1.draw();
+
+	collision_handler.ZombieBullet();
 	drawAll();
-
-	////	Desenarea axelor;
-
-	////	Matricea de redimensionare (pentru elementele "fixe" - axele);
-	//myMatrix = resizeMatrix;
-	////	Culoarea;
-	//codCol = 0;
-	////	Transmiterea variabilelor uniforme pentru MATRICE DE TRANSFORMARE si COLORARE spre shadere;
-	//glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	//glUniform1i(codColLocation, codCol);
-	////  Functia de desenare primeste 3 argumente:
-	////  - arg1 = tipul primitivei desenate,
-	////  - arg2 = indicele primului punct de desenat din buffer,
-	////  - arg3 = numarul de puncte consecutive de desenat;
-	//glDrawArrays(GL_LINES, 0, 4);
-
-	////	Desenarea dreptunghiului ALBASTRU;
-
-	////	Matricea de transformare pentru dreptunghiul ALBASTRU; 
-	//myMatrix = resizeMatrix * matrTransl * matrScale1;
-	//codCol = 1;
-	////	Transmiterea variabilelor uniforme pentru MATRICEA DE TRANSFORMARE si COLORARE spre shadere;
-	//glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	//glUniform1i(codColLocation, codCol);
-	//glDrawArrays(GL_POLYGON, 4, 4);
-
-	////	Desenarea dreptunghiului ROSU;
-
-	////	Matricea de transformare pentru dreptunghiul ROSU; 
-	//myMatrix = resizeMatrix * matrTransl * matrRot * matrDepl * matrScale2;
-	//codCol = 2;
-	////	Transmiterea variabilelor uniforme pentru MATRICE DE TRANSFORMARE si COLORARE spre shadere;
-	//glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	//glUniform1i(codColLocation, codCol);
-	//glDrawArrays(GL_POLYGON, 4, 4);
 
 	glutSwapBuffers();	//	Inlocuieste imaginea deseneata in fereastra cu cea randata; 
 	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;

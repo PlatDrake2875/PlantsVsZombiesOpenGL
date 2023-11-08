@@ -9,14 +9,15 @@
   C:SOIL.dll
   1 File(s) copied
   Bullet.cpp
+  Collisions.cpp
   Colors.h
   GenericNPC.cpp
   glm.cpp
   main.cpp
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL_1\PlantsVsZombies\PlantsVsZombies\main.cpp(38,34): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL_1\PlantsVsZombies\PlantsVsZombies\main.cpp(38,46): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL_1\PlantsVsZombies\PlantsVsZombies\main.cpp(629,47): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL_1\PlantsVsZombies\PlantsVsZombies\main.cpp(629,29): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
+C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(39,34): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(39,46): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(558,47): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
+C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(558,29): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
   Plant.cpp
   Shared.cpp
   imageloader.cpp
@@ -24,7 +25,8 @@ C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL_1\PlantsVsZombies\PlantsVsZomb
   Zombie.cpp
   Generating Code...
   glad.c
-  PlantsVsZombies.vcxproj -> C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL_1\PlantsVsZombies\x64\Debug\PlantsVsZombies.exe
+  LINK : C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\x64\Debug\PlantsVsZombies.exe not found or not built by the last incremental link; performing full link
+  PlantsVsZombies.vcxproj -> C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\x64\Debug\PlantsVsZombies.exe
   0 File(s) copied
   0 File(s) copied
   0 File(s) copied
