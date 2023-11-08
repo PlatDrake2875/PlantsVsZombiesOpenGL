@@ -7,7 +7,7 @@
 #include "Colors.h"
 #include <GL/glew.h>  
 
-class Plant: public	GenericNPC
+class Plant : public	GenericNPC
 {
 	// Numarul de puncte ale obiectului
 	static GLuint nrPoints;
@@ -16,9 +16,13 @@ class Plant: public	GenericNPC
 	static GLuint offset;
 public:
 	static void setOffset(int offset);
+	void setColor(int color);
 	// xCenter, yCenter, zCenter - coordonatele centrului obiectului
 	Plant(int color, float xCenter, float yCenter, float zCenter = 0.f);
+	Plant(float xCenter, float yCenter, float zCenter = 0.f);
+	//Plant();
 	void draw() override;
+	void toString();
 	~Plant();
 };
 

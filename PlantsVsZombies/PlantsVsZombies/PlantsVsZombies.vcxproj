@@ -176,10 +176,12 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bullet.cpp" />
+    <ClCompile Include="Collisions.cpp" />
     <ClCompile Include="Colors.h" />
     <ClCompile Include="GenericNPC.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Placing.cpp" />
     <ClCompile Include="Plant.cpp" />
     <ClCompile Include="Shared.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -189,6 +191,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bullet.h" />
+    <ClInclude Include="Collisions.h" />
     <ClInclude Include="GenericNPC.h" />
     <ClInclude Include="include\glad\glad.h" />
     <ClInclude Include="include\GLFW\glfw3.h" />
@@ -487,6 +490,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClInclude Include="include\KHR\khrplatform.h" />
     <ClInclude Include="include\loadShaders.h" />
     <ClInclude Include="include\SOIL.h" />
+    <ClInclude Include="Placing.h" />
     <ClInclude Include="Plant.h" />
     <ClInclude Include="Shared.h" />
     <ClInclude Include="Zombie.h" />
