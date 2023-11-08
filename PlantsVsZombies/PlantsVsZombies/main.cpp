@@ -1,19 +1,4 @@
-﻿//
-// ================================================
-// | Grafica pe calculator                        |
-// ================================================
-// | Laboratorul III - 03_02_animatie.cpp |
-// ============================================
-//
-//	Program ce deseneaza un dreptunghi ce se deplaseaza stanga-dreapta si are un patrat ce orbiteaza in jurul sau, folosindu-se tehnicile MODERN OpenGL;
-//	ELEMENTE DE NOUTATE:
-//	- utilizeaza diverse transformari si compunerea acestora folosind biblioteca glm,
-//	- functii pentru utilizarea mouse-ului;
-//
-//
-//	Biblioteci
-
-#include <iostream>			//	Biblioteca necesara pentru afisarea in consola;
+﻿#include <iostream>			//	Biblioteca necesara pentru afisarea in consola;
 #include <windows.h>        //	Utilizarea functiilor de sistem Windows (crearea de ferestre, manipularea fisierelor si directoarelor);
 #include <stdlib.h>         //  Biblioteci necesare pentru citirea shaderelor;
 #include <stdio.h>
@@ -27,6 +12,9 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "Shared.h"
+#include "Plant.h"
+
 
 using namespace std;
 
@@ -35,18 +23,12 @@ GLuint
 VaoId,
 VboId,
 ColorBufferId,
-ProgramId,
-myMatrixLocation,
-matrScaleLocation,
-matrTranslLocation,
-matrRotlLocation,
-codColLocation;
-//	Dimensiunile ferestrei de afisare;
-GLfloat
-winWidth = 1000, winHeight = 600;
+ProgramId;
+
 //	Variabile catre matricile de transformare;
-glm::mat4
-myMatrix, resizeMatrix, matrTransl, matrScale1, matrScale2, matrScale3, matrRot, matrDepl;
+glm::mat4 myMatrix;
+
+const int NMax = 100000;
 
 //	Variabila ce determina schimbarea culorii pixelilor in shader;
 int codCol;
@@ -92,20 +74,50 @@ void MoveLeft(void)
 	glutPostRedisplay();	//	Forteza redesenarea scenei;
 }
 
+void moveAll() {
+	// move all the zombies
+	auto it = Shared::zombies.begin();
+	while (it != Shared::zombies.end()) {
+		(*it)->move();
+		//std::cout << (*it)->getPosition().y << '\n';
+		if (!(*it)->isActive()) {
+			delete *it;
+			it = Shared::zombies.erase(it);
+		}	
+		else
+			++it;
+	}
+		
+	auto it1 = Shared::bullets.begin();
+	while (it1 != Shared::bullets.end()) {
+		(*it1)->move();
+		if (!(*it1)->isActive()) {
+			delete *it1;
+			it1 = Shared::bullets.erase(it1);
+		}
+		else
+			++it1;
+	}	
+
+	glutPostRedisplay();
+}
+
+void drawAll() {
+	for(auto zombie: Shared::zombies)
+		zombie->draw();
+	
+	for(auto bullet: Shared::bullets)
+		bullet->draw();
+}
+
 //	Functie ce modifica deplasarea dreptunghiurilor in functie de apasarea butoanelor de pe mouse;
 void UseMouse(int button, int state, int x, int y)
 {
 	switch (button) {
 	case GLUT_LEFT_BUTTON:			//	CLICK stanga => dreptunghiurile se misca spre stanga;
-		if (state == GLUT_DOWN)
-			alpha = -step;
-		glutIdleFunc(MoveLeft);
-		break;
-	case GLUT_RIGHT_BUTTON:			//	CLICK dreapta => dreptunghiurile se misca spre drepta;
-		if (state == GLUT_DOWN)
-			alpha = step;
-		glutIdleFunc(MoveRight);
-		break;
+		if (state == GLUT_DOWN) {
+			// do something when left click is pressed
+		}
 	default:
 		break;
 	}
@@ -158,6 +170,31 @@ void plant(GLfloat Vertices[], int &poz,  float x, float y) {
 	Vertices[++poz] = y + 100.f;
 	Vertices[++poz] = 0.0f;
 	Vertices[++poz] = 1.0f;
+}
+
+// Punem in Vertices punctele care deseneaza un zombie centrat in (0, 0) (mai intai partea exterioara, apoi cea interioara)
+void zombie(GLfloat Vertices[], int& poz, float rBig = 40.f, float rSmall = 25.f) {
+	const int n = 6;
+
+	// Punctele pentru exterior
+	for (int k = 0; k < n; ++k) {
+		float angle = 2 * k * Shared::PI / n;
+		GLfloat x = rBig * cos(angle), y = rBig * sin(angle);
+		Vertices[++poz] = x;
+		Vertices[++poz] = y;
+		Vertices[++poz] = 0.0f;
+		Vertices[++poz] = 1.0f;
+	}
+	
+	// Punctele pentru interior
+	for (int k = 0; k < n; ++k) {
+		float angle = 2 * k * Shared::PI / n;
+		GLfloat x = rSmall * cos(angle), y = rSmall * sin(angle);
+		Vertices[++poz] = x;
+		Vertices[++poz] = y;
+		Vertices[++poz] = 1.0f; // 1.0f pentru a fi desenat deasupra
+		Vertices[++poz] = 1.0f;
+	}
 }
 
 // Desenam o stea cu 5 colturi
@@ -221,9 +258,9 @@ void star(GLfloat Vertices[], int &poz, GLfloat x, GLfloat y, GLfloat scale = 2.
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
 void CreateVBO(void)
 {
-
 	//  Coordonatele varfurilor;
-	GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
+	// GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
+	GLfloat Vertices[NMax] = { 0 };
 
 	// Culorile axelor
 	GLfloat Colors[16] = { 
@@ -358,7 +395,7 @@ void CreateVBO(void)
 	plant(Vertices, poz, 475.f, 475.f);
 
 	// stelele - pretul plantelor
-	GLfloat width_stars = 25.0f;
+	GLfloat width_stars = 25.0f;	
 	GLfloat y_stars = 450.f;
 	star(Vertices, poz, 100.f, y_stars);
 
@@ -380,8 +417,19 @@ void CreateVBO(void)
 	for (int i = 0; i < 6;i++)
 		star(Vertices, poz, x_stars + width_stars * i, y_stars);
 
-	
-	//  Transmiterea datelor prin buffere;
+	// Asezarea obiectelor dinamice in Vertices
+	// Planta generica - 7 puncte
+	Plant::setOffset((poz + 1) / 4);
+	plant(Vertices, poz, -50.f, -50.f); // planta centrata in (0, 0) ca sa o pot pune unde vreau din translatii
+
+	// Zombie - 12 puncte (mai intai partea exterioara, apoi cea interioara
+	Zombie::setOffset((poz + 1) / 4);
+	zombie(Vertices, poz);
+
+	// Bullet - 10 puncte (o stea)
+	Bullet::setOffset((poz + 1) / 4);
+	star(Vertices, poz, -30.f, -30.f, 5.f);
+
 
 	//  Se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO;
 	glGenVertexArrays(1, &VaoId);                                                   //  Generarea VAO si indexarea acestuia catre variabila VaoId;
@@ -437,12 +485,12 @@ void Cleanup(void)
 //  Setarea parametrilor necesari pentru fereastra de vizualizare;
 void Initialize(void)
 {
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);		//  Culoarea de fond a ecranului;
+	glClearColor(0.23f, 0.23f, 0.23f, 0.0f);		//  Culoarea de fond a ecranului;
 	CreateVBO();								//  Trecerea datelor de randare spre bufferul folosit de shadere;
 	CreateShaders();							//  Initilizarea shaderelor;
 	//	Instantierea variabilelor uniforme pentru a "comunica" cu shaderele;
-	codColLocation = glGetUniformLocation(ProgramId, "codCol");
-	myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
+	Shared::codColLocation = glGetUniformLocation(ProgramId, "codCol");
+	Shared::myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
 }
 
 //  Functia de desenarea a graficii pe ecran;
@@ -450,55 +498,58 @@ void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
 
-	// TO DO: schimbati transformarile (de exemplu deplasarea are loc pe axa Oy sau pe o alta dreapta);
-	resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);							//	"Aducem" scena la "patratul standard" [-1,1]x[-1,1];
-	matrTransl = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0, 0.0));		//	Se translateaza de-a lungul axei Ox;
-	matrDepl = glm::translate(glm::mat4(1.0f), glm::vec3(0, 80.0, 0.0));		//	Se translateaza patratul ROSU fata de patratul ALBASTRU;
-	matrScale1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.1, 0.3, 0.0));			//	Se scaleaza coordonatele initiale si se obtine dreptunghiul ALABSTRU;
-	matrScale2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.25, 0.25, 0.0));		//	Se scaleaza coordonatele initiale si se obtine patratul ROSU;
-	matrRot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0, 0.0, 1.0));	//	Roatie folosita la deplasarea patratului ROSU;
+	Shared::resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);	
 
-	matrScale3 = glm::scale(glm::mat4(1.0f), glm::vec3(3.0, 3.0, 0.0));	
-	// construieste o scalare care dubleaza dimensiunea obiectului
+	myMatrix = Shared::resizeMatrix;
+	codCol = FIELD_GREEN;
+	glUniformMatrix4fv(Shared::myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(Shared::codColLocation, codCol);
 
-
-
-	myMatrix = resizeMatrix;
-	codCol = 1;
-	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	
+	// Desenam cele 9 "campuri" in care vor fi plasate plantele
 	for (int i = 0; i < 9; ++i) {
 		glDrawArrays(GL_POLYGON, 4 * i, 4);
 	}
 
 	// desenam baza
-	codCol = 2;
-	glUniform1i(codColLocation, codCol);
+	codCol = RED;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 36, 4);
 
 	// desenam kenarele pentru plante
-	codCol = 0;
-	glUniform1i(codColLocation, codCol);
+	codCol = WHITE;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_LINE_LOOP, 40, 4);
 	glDrawArrays(GL_LINE_LOOP, 44, 4);
 	glDrawArrays(GL_LINE_LOOP, 48, 4);
 	glDrawArrays(GL_LINE_LOOP, 52, 4);
 
 	// desenam vietile
-	codCol = 2;
-	glUniform1i(codColLocation, codCol);
+	codCol = RED;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 56, 4);
 	glDrawArrays(GL_POLYGON, 60, 4);
 	glDrawArrays(GL_POLYGON, 64, 4);
 
-	// desenam plantele
+	// desenam plantele din chenare
+	codCol = MAGENTA;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 68, 7);
+
+	codCol = YELLOW;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 75, 7);
+
+	codCol = CYAN;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 82, 7);
+
+	codCol = ORANGE;
+	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 89, 7);
 
 	// desenam stelele - pretul plantelor
+	codCol = LIGHT_GRAY;
+	glUniform1i(Shared::codColLocation, codCol);
 	int poz = 96;
 	for (int i=0; i<10;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
@@ -507,6 +558,24 @@ void RenderFunction(void)
 	poz = 196;
 	for (int i = 0; i < 6;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
+
+	// Test Plant spawn
+	Plant p1(YELLOW, 150.f, 75.f);
+	Plant p2(CYAN, 275.f, 200.f);
+	Plant p3(ORANGE, 400.f, 325.f);
+	Plant p4(MAGENTA, 400.f, 75.f);
+	p1.draw(); 
+	p2.draw();
+	p3.draw();
+	p4.draw();
+
+	//Bullet b(YELLOW, 0.f, 0.f);
+	//b.draw();
+
+	// Test Zombie spawn
+	//Zombie z1(YELLOW, 500.f, 75.f);
+	//z1.draw();
+	drawAll();
 
 	////	Desenarea axelor;
 
@@ -550,13 +619,15 @@ void RenderFunction(void)
 //	Punctul de intrare in program, se ruleaza rutina OpenGL;
 int main(int argc, char* argv[])
 {
-	//  Se initializeaza GLUT si contextul OpenGL si se configureaza fereastra si modul de afisare;
+	// Stabilim dimensiunile ferestrei
+	Shared::winWidth = 1000.f;
+	Shared::winHeight = 600.f;
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);					//	Se folosesc 2 buffere (unul pentru afisare si unul pentru randare => animatii cursive) si culori RGB;
 	glutInitWindowPosition(100, 100);								//  Pozitia initiala a ferestrei;
-	glutInitWindowSize(winWidth, winHeight);									//  Dimensiunea ferestrei;
-	glutCreateWindow("Dreptunghi cu satelit - OpenGL <<nou>>");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
+	glutInitWindowSize(Shared::winWidth, Shared::winHeight);									//  Dimensiunea ferestrei;
+	glutCreateWindow("Plants Vs Zombies OpenGL");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
 
 	//	Se initializeaza GLEW si se verifica suportul de extensii OpenGL modern disponibile pe sistemul gazda;
 	//  Trebuie initializat inainte de desenare;
@@ -564,7 +635,15 @@ int main(int argc, char* argv[])
 	glewInit();
 
 	Initialize();						//  Setarea parametrilor necesari pentru fereastra de vizualizare; 
+
+	// TESTING PURPOSES
+	Zombie* z = new Zombie(YELLOW, 1100.f, 75.f);
+	Shared::zombies.push_back(z);
+	Bullet* b = new Bullet(YELLOW, 100.f, 75.f);
+	Shared::bullets.push_back(b);
+
 	glutDisplayFunc(RenderFunction);	//  Desenarea scenei in fereastra;
+	glutIdleFunc(moveAll);
 	glutMouseFunc(UseMouse);			//	Activarea utilizarii mouseului;
 	glutCloseFunc(Cleanup);				//  Eliberarea resurselor alocate de program;
 

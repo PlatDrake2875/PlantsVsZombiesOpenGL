@@ -1,6 +1,9 @@
 ss.png
-PlantsVsZombies/.vs/PlantsVsZombies/v17/
-PlantsVsZombies/PlantsVsZombies/x64/
-PlantsVsZombies/PlantsVsZombies/lib/
-PlantsVsZombies/.vs/PlantsVsZombies/FileContentIndex/
-x64/
+# PlantsVsZombies/.vs/PlantsVsZombies/v17/*
+# PlantsVsZombies/PlantsVsZombies/x64/
+# PlantsVsZombies/PlantsVsZombies/lib/
+# PlantsVsZombies/.vs/PlantsVsZombies/FileContentIndex/
+# x64/
+# PlantsVsZombies/PlantsVsZombies/PlantsVsZombies.vcxproj
+# PlantsVsZombies/PlantsVsZombies/PlantsVsZombies.vcxproj.filters
+.vs
