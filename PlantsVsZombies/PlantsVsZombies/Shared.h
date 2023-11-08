@@ -6,6 +6,9 @@
 #include "Bullet.h"
 #pragma once
 
+struct square {
+	float x, y;
+};
 
 class Shared
 {
@@ -18,6 +21,8 @@ public:
 	static GLuint codColLocation;
 	static glm::mat4 resizeMatrix;
 	static std::list<Plant*> plants;
+	static std::list<square> squares;
+	static std::list<square> usedSquares;
 	static std::list<Zombie*> zombies;
 	static std::list<Bullet*> bullets;
 };

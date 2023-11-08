@@ -15,6 +15,7 @@
 #include "Shared.h"
 #include "Plant.h"
 #include "Collisions.h"
+#include "Placing.h"
 
 
 using namespace std;
@@ -38,6 +39,20 @@ float xMin = 0.0f, xMax = 1000.0f, yMin = 0.0f, yMax = 600.0f;
 //	Variabile pentru deplasarea pe axa Ox si pentru rotatie;
 float i = 0.0, alpha = 0.0, step = 0.3, beta = 0.002, angle = 0;
 Collisions collision_handler;
+
+POINT mousePosition;
+
+GLuint pressedNumber = 0;
+
+
+
+void setSquaresCenters() {
+	Shared::squares.clear();
+	float xBL = 100.f, yBL = 25.f, offset = 25.f;
+	for (int i = 0; i < 9; ++i) {
+		Shared::squares.push_back({ xBL + 50.f + 100 * (i % 3) + (i % 3) * offset, yBL + 50.f + 100 * (i / 3) + (i / 3) * offset });
+	}
+}
 
 //	Functie pentru afisarea matricei de transformare;
 void DisplayMatrix()
@@ -111,15 +126,41 @@ void drawAll() {
 		bullet->draw();
 }
 
+bool isMousePressed = false;
+
 //	Functie ce modifica deplasarea dreptunghiurilor in functie de apasarea butoanelor de pe mouse;
 void UseMouse(int button, int state, int x, int y)
 {
 	switch (button) {
 	case GLUT_LEFT_BUTTON:			//	CLICK stanga => dreptunghiurile se misca spre stanga;
 		if (state == GLUT_DOWN) {
-			// do something when left click is pressed
+			mousePosition.x = x;
+			mousePosition.y = 600 - y;
+			isMousePressed = true;
 		}
 	default:
+		break;
+	}
+}
+
+
+void ProcessPlacingKeys(unsigned char key, int x, int y)
+{
+	switch (key) {		//	Procesarea tastelor 'l' si 'r' modifica unghiul de rotire al patratului;
+	case '1':
+		pressedNumber = 1;
+		break;
+	case '2':
+		pressedNumber = 2;
+		break;
+	case '3':
+		pressedNumber = 3;
+		break;
+	case '4':
+		pressedNumber = 4;
+		break;
+	default:
+		pressedNumber = 0;
 		break;
 	}
 }
@@ -454,6 +495,21 @@ void Initialize(void)
 	Shared::myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
 }
 
+int getPlantColor(int pressedNumber) {
+	switch (pressedNumber) {
+	case 1:
+		return Colors::MAGENTA;
+	case 2:
+		return Colors::YELLOW;
+	case 3:
+		return Colors::CYAN;
+	case 4:
+		return Colors::ORANGE;
+	default:
+		return Colors::DEFAULT;
+	}
+}
+
 //  Functia de desenarea a graficii pe ecran;
 void RenderFunction(void)
 {
@@ -477,8 +533,30 @@ void RenderFunction(void)
 	glDrawArrays(GL_POLYGON, 36, 4);
 
 	// desenam kenarele pentru plante
+	glLineWidth(1.f);
 	codCol = WHITE;
 	glUniform1i(Shared::codColLocation, codCol);
+	switch (pressedNumber) {
+	case 1:
+		glLineWidth(2.5f);
+		glDrawArrays(GL_LINE_LOOP, 40, 4);
+		break;
+	case 2:
+		glLineWidth(2.5f);
+		glDrawArrays(GL_LINE_LOOP, 44, 4);
+		break;
+	case 3:
+		glLineWidth(2.5f);
+		glDrawArrays(GL_LINE_LOOP, 48, 4);
+		break;
+	case 4:
+		glLineWidth(2.5f);
+		glDrawArrays(GL_LINE_LOOP, 52, 4);
+		break;
+
+	}
+
+	glLineWidth(1.f);
 	glDrawArrays(GL_LINE_LOOP, 40, 4);
 	glDrawArrays(GL_LINE_LOOP, 44, 4);
 	glDrawArrays(GL_LINE_LOOP, 48, 4);
@@ -520,16 +598,47 @@ void RenderFunction(void)
 	for (int i = 0; i < 6;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
 
-	// Test Plant spawn
-	Plant p1(YELLOW, 150.f, 75.f);
-	Plant p2(CYAN, 275.f, 200.f);
-	Plant p3(ORANGE, 400.f, 325.f);
-	Plant p4(MAGENTA, 400.f, 75.f);
 
-	p1.draw();
-	p2.draw();
-	p3.draw();
-	p4.draw();
+
+	glutKeyboardFunc(ProcessPlacingKeys);
+
+	glutMouseFunc(UseMouse);
+
+	setSquaresCenters();
+
+	int plantColor = getPlantColor(pressedNumber);
+
+	cout << "Plant color: " << plantColor << '\n';
+
+	auto it = Shared::squares.begin();
+
+	while (it != Shared::squares.end()) {
+		//std::cout << (*it).x << " " << (*it).y << '\n';
+		if (isMousePressed && mousePosition.x >= (*it).x - 50.f && mousePosition.x <= (*it).x + 50.f && mousePosition.y >= (*it).y - 50.f && mousePosition.y <= (*it).y + 50.f) {
+			//std::cout << "Pressed " << pressedNumber << '\n';
+			//cout << "Mouse position: " << mousePosition.x << " " << mousePosition.y << '\n';
+			std::cout << (*it).x << " " << (*it).y << '\n';
+
+			Plant* pl = new Plant(plantColor, (*it).x, (*it).y);
+			//pl.draw();
+			Placing::addPlant(pl);
+			Shared::usedSquares.push_back(*it);
+			//pressedNumber = 0;
+		}
+		++it;
+	}
+
+	auto it2 = Shared::plants.begin();
+
+	cout << "Plants size: " << Shared::plants.size() << '\n';
+
+	while (it2 != Shared::plants.end()) {
+		Plant p = **it2;
+		(*it2)->toString();
+		if (p.getColor() > 0)
+			p.draw();
+		++it2;
+	}
 
 	//Bullet b(YELLOW, 0.f, 0.f);
 	//b.draw();

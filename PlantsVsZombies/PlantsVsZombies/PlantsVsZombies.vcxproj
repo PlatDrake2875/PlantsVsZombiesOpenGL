@@ -181,6 +181,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClCompile Include="GenericNPC.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Placing.cpp" />
     <ClCompile Include="Plant.cpp" />
     <ClCompile Include="Shared.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -489,6 +490,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClInclude Include="include\KHR\khrplatform.h" />
     <ClInclude Include="include\loadShaders.h" />
     <ClInclude Include="include\SOIL.h" />
+    <ClInclude Include="Placing.h" />
     <ClInclude Include="Plant.h" />
     <ClInclude Include="Shared.h" />
     <ClInclude Include="Zombie.h" />

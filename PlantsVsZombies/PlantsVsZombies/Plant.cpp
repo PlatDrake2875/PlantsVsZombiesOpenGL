@@ -1,11 +1,16 @@
 #include "Plant.h"
 #include "Shared.h"
+#include <iostream>
 
 GLuint Plant::nrPoints = 7;
 GLuint Plant::offset = 0;
 
 Plant::Plant(int color, float xCenter, float yCenter, float zCenter): 
 	GenericNPC(color, xCenter, yCenter, zCenter) {}
+
+Plant::Plant(float xCenter, float yCenter, float zCenter) :
+	GenericNPC(xCenter, yCenter, zCenter) {}
+
 
 void Plant::draw() {
 	glm::mat4 translateMatrix = glm::translate(this->getPosition());
@@ -18,6 +23,14 @@ void Plant::draw() {
 
 void Plant::setOffset(int offset) {
 	Plant::offset = offset;
+}
+
+void Plant::setColor(int color) {
+	this->color = color;
+}
+
+void Plant::toString() {
+	std::cout << "Plant: " << this->getPosition().x << " " << this->getPosition().y << " " << this->getPosition().z << " " << this->getColor() << "\n";
 }
 
 Plant::~Plant() {}

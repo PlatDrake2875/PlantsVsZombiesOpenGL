@@ -9,7 +9,7 @@ class GenericNPC
 {
 	glm::vec3 position;
 	float health;
-	int color;
+protected:	int color;
 public:
 	// xCenter, yCenter, zCenter - coordonatele centrului obiectului
 	GenericNPC(int color, float xCenter, float yCenter, float zCenter = 0.f);
