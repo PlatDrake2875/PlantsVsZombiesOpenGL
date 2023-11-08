@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DEFECTS>
+  <DEFECT>
+    <SFA>
+      <FILEPATH>C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\</FILEPATH>
+      <FILENAME>GenericNPC.cpp</FILENAME>
+      <LINE>10</LINE>
+      <COLUMN>12</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'GenericNPC::color' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>GenericNPC::{ctor}</FUNCTION>
+    <DECORATED>??0GenericNPC@@QEAA@XZ</DECORATED>
+    <FUNCLINE>10</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>GenericNPC::color</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT>
+  <DEFECT>
+    <SFA>
+      <FILEPATH>C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\</FILEPATH>
+      <FILENAME>GenericNPC.cpp</FILENAME>
+      <LINE>10</LINE>
+      <COLUMN>12</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'GenericNPC::position' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>GenericNPC::{ctor}</FUNCTION>
+    <DECORATED>??0GenericNPC@@QEAA@XZ</DECORATED>
+    <FUNCLINE>10</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>GenericNPC::position</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT>
+  <DEFECT>
+    <SFA>
+      <FILEPATH>C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\</FILEPATH>
+      <FILENAME>GenericNPC.cpp</FILENAME>
+      <LINE>10</LINE>
+      <COLUMN>12</COLUMN>
+    </SFA>
+    <DEFECTCODE>26495</DEFECTCODE>
+    <DESCRIPTION>Variable 'GenericNPC::health' is uninitialized. Always initialize a member variable (type.6).</DESCRIPTION>
+    <FUNCTION>GenericNPC::{ctor}</FUNCTION>
+    <DECORATED>??0GenericNPC@@QEAA@XZ</DECORATED>
+    <FUNCLINE>10</FUNCLINE>
+    <ADDITIONALINFO>
+      <targetSymbol>GenericNPC::health</targetSymbol>
+    </ADDITIONALINFO>
+    <PATH></PATH>
+  </DEFECT>
+</DEFECTS>
