@@ -12,3 +12,4 @@ const float Shared::PI = 3.14159265358979323846f;
 int Shared::lives = 3;
 GLfloat Shared::winWidth = 0.f;
 GLfloat Shared::winHeight = 0.f;
+int Shared::render_duration = 0; // in miliseconds

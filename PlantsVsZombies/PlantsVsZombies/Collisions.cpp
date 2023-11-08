@@ -13,7 +13,9 @@ void Collisions::ZombieBullet()
 	{
 		for (auto& bullet : Shared::bullets)
 		{
-			if (zombie->getPosition().x < bullet->getPosition().x)
+			if (zombie->getPosition().x < bullet->getPosition().x 
+				&& zombie->getColor() == bullet->getColor()
+				&& abs(zombie->getPosition().y - bullet->getPosition().y) < 50)
 			{
 				glm::vec3 new_pos(glm::vec3(-100.0f, 0.0f, 0.0f));
 				zombie->setPosition(new_pos);
