@@ -39,11 +39,8 @@ float xMin = 0.0f, xMax = 1000.0f, yMin = 0.0f, yMax = 600.0f;
 //	Variabile pentru deplasarea pe axa Ox si pentru rotatie;
 float i = 0.0, alpha = 0.0, step = 0.3, beta = 0.002, angle = 0;
 Collisions collision_handler;
-
 POINT mousePosition;
-
 GLuint pressedNumber = 0;
-
 
 
 void setSquaresCenters() {
@@ -175,70 +172,6 @@ void CreateShaders(void)
 	glUseProgram(ProgramId);
 }
 
-// Desenam o planta
-// x, y - coordonatele stanga jos ale chenarului in care se va desena planta
-void plant(GLfloat Vertices[], int& poz, float x, float y) {
-	Vertices[++poz] = x + 25.f;
-	Vertices[++poz] = y + 50.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-
-	Vertices[++poz] = x + 50.f;
-	Vertices[++poz] = y + 0.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-
-	Vertices[++poz] = x + 75.f;
-	Vertices[++poz] = y + 33.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-
-	Vertices[++poz] = x + 100.f;
-	Vertices[++poz] = y + 33.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-
-	Vertices[++poz] = x + 100.f;
-	Vertices[++poz] = y + 67.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-
-	Vertices[++poz] = x + 75.f;
-	Vertices[++poz] = y + 67.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-
-	Vertices[++poz] = x + 50.f;
-	Vertices[++poz] = y + 100.f;
-	Vertices[++poz] = 0.0f;
-	Vertices[++poz] = 1.0f;
-}
-
-// Punem in Vertices punctele care deseneaza un zombie centrat in (0, 0) (mai intai partea exterioara, apoi cea interioara)
-void zombie(GLfloat Vertices[], int& poz, float rBig = 40.f, float rSmall = 25.f) {
-	const int n = 6;
-
-	// Punctele pentru exterior
-	for (int k = 0; k < n; ++k) {
-		float angle = 2 * k * Shared::PI / n;
-		GLfloat x = rBig * cos(angle), y = rBig * sin(angle);
-		Vertices[++poz] = x;
-		Vertices[++poz] = y;
-		Vertices[++poz] = 0.0f;
-		Vertices[++poz] = 1.0f;
-	}
-
-	// Punctele pentru interior
-	for (int k = 0; k < n; ++k) {
-		float angle = 2 * k * Shared::PI / n;
-		GLfloat x = rSmall * cos(angle), y = rSmall * sin(angle);
-		Vertices[++poz] = x;
-		Vertices[++poz] = y;
-		Vertices[++poz] = 1.0f; // 1.0f pentru a fi desenat deasupra
-		Vertices[++poz] = 1.0f;
-	}
-}
-
 // Desenam o stea cu 5 colturi
 // x, y - coordonatele stanga jos ale chenarului in care se va desena steaua
 // actualizam pozitia in vectorul Vertices
@@ -295,8 +228,8 @@ void star(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 2.
 	Vertices[++poz] = 1.0f;
 }
 
-
-void square(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 1.0f)
+// Desenam un patrat
+void patrat(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 1.0f)
 {
 	// Coltul stanga jos
 	Vertices[++poz] = x;
@@ -323,6 +256,7 @@ void square(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 
 	Vertices[++poz] = 1.0f;
 }
 
+// Desenam un dreptunghi
 void rectangle(GLfloat Vertices[], int& poz)
 {
 
@@ -351,29 +285,24 @@ void rectangle(GLfloat Vertices[], int& poz)
 	Vertices[++poz] = 1.0f;
 }
 
+
 //  Se initializeaza
 //  un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
 void CreateVBO(void)
 {
 	//  Coordonatele varfurilor;
-	// GLfloat Vertices[144 + 16 + 16 * 4 + 16 * 3 + 28 * 4 +40*10 + 40*6] = { 0 };
 	GLfloat Vertices[NMax] = { 0 };
 
 	// Culorile axelor
-	GLfloat Colors[16] = {
-		0.0f, 0.0f, 0.0f, 1.0f,	// Negru
-		1.0f, 0.0f, 0.0f, 1.0f,	// Rosu
-		0.0f, 1.0f, 0.0f, 1.0f,	// Verde
-		0.0f, 0.0f, 1.0f, 1.0f	// Albastru
-	};
+	GLfloat Colors[1] = { 0 };
 
 	int poz = -1;
 
 	float xBL = 100.0f, yBL = 25.0f, offset = 25.0f;
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
-			square(Vertices, poz, xBL + i * (100 + offset), yBL + j * (100 + offset));
+			patrat(Vertices, poz, xBL + i * (100 + offset), yBL + j * (100 + offset));
 		}
 	}
 
@@ -382,20 +311,21 @@ void CreateVBO(void)
 	// Kenarele pentru plante
 	yBL = 475.f;
 	for (int i = 0; i < 4;i++) {
-		square(Vertices, poz, xBL + i * (100 + offset), yBL);
+		patrat(Vertices, poz, xBL + i * (100 + offset), yBL);
 	}
 
 	// Patratele pentru vieti
 	offset = 25.f;
 	for (int i = 0; i < 3; i++) {
-		square(Vertices, poz, 625.0f + i * (50 + offset), 500.0f, 0.5f);
+		patrat(Vertices, poz, 625.0f + i * (50 + offset), 500.0f, 0.5f);
 	}
 
-	plant(Vertices, poz, 100.f, 475.f);
-	plant(Vertices, poz, 225.f, 475.f);
-	plant(Vertices, poz, 350.f, 475.f);
-	plant(Vertices, poz, 475.f, 475.f);
-
+	// Incarcam varfurile pentru plantele din chenare
+	Plant(Colors::MAGENTA, 100.f, 475.f).loadVertices(Vertices, poz);
+	Plant(Colors::YELLOW, 225.f, 475.f).loadVertices(Vertices, poz);
+	Plant(Colors::CYAN, 350.f, 475.f).loadVertices(Vertices, poz);
+	Plant(Colors::ORANGE, 475.f, 475.f).loadVertices(Vertices, poz);
+	
 	// stelele - pretul plantelor
 	GLfloat width_stars = 25.0f;
 	GLfloat y_stars = 450.f;
@@ -422,11 +352,11 @@ void CreateVBO(void)
 	// Asezarea obiectelor dinamice in Vertices
 	// Planta generica - 7 puncte
 	Plant::setOffset((poz + 1) / 4);
-	plant(Vertices, poz, -50.f, -50.f); // planta centrata in (0, 0) ca sa o pot pune unde vreau din translatii
+	Plant(Colors::BLACK, -50.f, -50.f).loadVertices(Vertices, poz); // planta centrata in (0, 0) ca sa o pot pune unde vreau din translatii
 
 	// Zombie - 12 puncte (mai intai partea exterioara, apoi cea interioara
 	Zombie::setOffset((poz + 1) / 4);
-	zombie(Vertices, poz);
+	Zombie().loadVertices(Vertices, poz);
 
 	// Bullet - 10 puncte (o stea)
 	Bullet::setOffset((poz + 1) / 4);

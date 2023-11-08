@@ -6,6 +6,8 @@ Zombie::Zombie(int color, float xCenter, float yCenter, float zCenter):
 	currentXPosition = xCenter;
 }
 
+Zombie::Zombie() {};
+
 GLuint Zombie::nrPoints = 12;
 
 GLuint Zombie::offset = 0;
@@ -39,3 +41,28 @@ bool Zombie::isActive() const {
 }
 
 Zombie::~Zombie() {}
+
+void Zombie::loadVertices(GLfloat Vertices[], int& poz) {
+	float rBig = 40.f, rSmall = 25.f;
+	const int n = 6;
+
+	// Punctele pentru exterior
+	for (int k = 0; k < n; ++k) {
+		float angle = 2 * k * Shared::PI / n;
+		GLfloat x = rBig * cos(angle), y = rBig * sin(angle);
+		Vertices[++poz] = x;
+		Vertices[++poz] = y;
+		Vertices[++poz] = 0.0f;
+		Vertices[++poz] = 1.0f;
+	}
+
+	// Punctele pentru interior
+	for (int k = 0; k < n; ++k) {
+		float angle = 2 * k * Shared::PI / n;
+		GLfloat x = rSmall * cos(angle), y = rSmall * sin(angle);
+		Vertices[++poz] = x;
+		Vertices[++poz] = y;
+		Vertices[++poz] = 1.0f; // 1.0f pentru a fi desenat deasupra
+		Vertices[++poz] = 1.0f;
+	}
+}

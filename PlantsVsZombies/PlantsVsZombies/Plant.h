@@ -22,6 +22,7 @@ public:
 	Plant(float xCenter, float yCenter, float zCenter = 0.f);
 	//Plant();
 	void draw() override;
+	void loadVertices(GLfloat Vertices[], int& poz) override;
 	void toString();
 	~Plant();
 };
