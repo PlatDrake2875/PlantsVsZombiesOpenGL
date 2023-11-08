@@ -34,3 +34,43 @@ void Plant::toString() {
 }
 
 Plant::~Plant() {}
+
+void Plant::loadVertices(GLfloat Vertices[], int& poz) {
+	float x = this->getPosition().x;
+	float y = this->getPosition().y;
+
+	Vertices[++poz] = x + 25.f;
+	Vertices[++poz] = y + 50.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	Vertices[++poz] = x + 50.f;
+	Vertices[++poz] = y + 0.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	Vertices[++poz] = x + 75.f;
+	Vertices[++poz] = y + 33.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	Vertices[++poz] = x + 100.f;
+	Vertices[++poz] = y + 33.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	Vertices[++poz] = x + 100.f;
+	Vertices[++poz] = y + 67.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	Vertices[++poz] = x + 75.f;
+	Vertices[++poz] = y + 67.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+
+	Vertices[++poz] = x + 50.f;
+	Vertices[++poz] = y + 100.f;
+	Vertices[++poz] = 0.0f;
+	Vertices[++poz] = 1.0f;
+}

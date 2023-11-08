@@ -7,6 +7,8 @@ GenericNPC::GenericNPC(int color, float xCenter, float yCenter, float zCenter) {
 	this->color = color;
 }
 
+GenericNPC::GenericNPC() {}
+
 void GenericNPC::setHealth(float& health) {
 	this->health = health;
 }

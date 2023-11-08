@@ -21,8 +21,11 @@ class Zombie : public GenericNPC
 public:
 	// xCenter, yCenter, zCenter - coordonatele centrului obiectului
 	Zombie(int color, float xCenter, float yCenter, float zCenter = 0.f);
+	Zombie();
 	static void setOffset(int offset);
 	void draw() override;
+	// Punem in Vertices punctele care deseneaza un zombie centrat in (0, 0) (mai intai partea exterioara, apoi cea interioara)
+	void loadVertices(GLfloat Vertices[], int& poz) override;
 	void move();
 	bool isActive() const;
 	~Zombie();
