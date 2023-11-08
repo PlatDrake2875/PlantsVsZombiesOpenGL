@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Collisions.h"
 #include "Shared.h"
 #include "glm/glm.hpp"
@@ -17,8 +18,17 @@ void Collisions::ZombieBullet()
 				&& zombie->getColor() == bullet->getColor()
 				&& abs(zombie->getPosition().y - bullet->getPosition().y) < 50)
 			{
-				glm::vec3 new_pos(glm::vec3(-100.0f, 0.0f, 0.0f));
-				zombie->setPosition(new_pos);
+				glm::vec3 outside(glm::vec3(-200.0f, -200.0f, 0.0f));
+				// setrgem bullet-ul
+				bullet->setPosition(outside);
+
+				float new_health = zombie->getHealth() - 40.f;
+				zombie->setHealth(new_health);
+				std::cout << "Zombie health: " << zombie->getHealth() << std::endl;
+				if (zombie->getHealth() <= 0)
+				{
+					zombie->setPosition(outside);
+				}				
 			}
 		}
 	}

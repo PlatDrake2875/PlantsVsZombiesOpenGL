@@ -27,7 +27,7 @@ void Zombie::draw() {
 }
 
 void Zombie::move() {
-	this->currentXPosition -= step;
+	this->currentXPosition -= step*Shared::render_duration;
 	glm::vec3 newPosition = glm::vec3(this->currentXPosition, this->getPosition().y, this->getPosition().z);
 	this->setPosition(newPosition);
 }
