@@ -14,7 +14,7 @@ GLuint Zombie::offset = 0;
 
 int Zombie::interiorColor = DARK_GREEN;
 
-float Zombie::step = 0.1f;
+float Zombie::step = 0.05f;
 
 void Zombie::draw() {
 	glm::mat4 translateMatrix = glm::translate(this->getPosition());

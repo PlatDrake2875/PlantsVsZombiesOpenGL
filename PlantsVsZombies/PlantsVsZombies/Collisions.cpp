@@ -11,7 +11,6 @@
 void Collisions::ZombieBullet()
 {
 	for (auto& zombie : Shared::zombies)
-	{
 		for (auto& bullet : Shared::bullets)
 		{
 			if (zombie->getPosition().x < bullet->getPosition().x 
@@ -24,11 +23,25 @@ void Collisions::ZombieBullet()
 
 				float new_health = zombie->getHealth() - 40.f;
 				zombie->setHealth(new_health);
-				std::cout << "Zombie health: " << zombie->getHealth() << std::endl;
 				if (zombie->getHealth() <= 0)
-				{
 					zombie->setPosition(outside);
-				}				
+			}
+		}
+}
+
+// Functie care verifica daca un zombie distruge o planta
+// Daca da, o elimina din lista de plante
+void Collisions::ZombiePlant()
+{
+	for (auto& zombie : Shared::zombies)
+	{
+		for (auto& plant : Shared::plants)
+		{
+			if (zombie->getPosition().x < plant->getPosition().x
+				&& abs(zombie->getPosition().y - plant->getPosition().y) < 50)
+			{
+				glm::vec3 outside(glm::vec3(-200.0f, -200.0f, 0.0f));
+				plant->setPosition(outside);
 			}
 		}
 	}

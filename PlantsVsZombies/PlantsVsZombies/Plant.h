@@ -24,6 +24,7 @@ public:
 	void draw() override;
 	void loadVertices(GLfloat Vertices[], int& poz) override;
 	void toString();
+	int getPrice() const;
 	~Plant();
 };
 

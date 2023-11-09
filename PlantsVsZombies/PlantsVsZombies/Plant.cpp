@@ -74,3 +74,19 @@ void Plant::loadVertices(GLfloat Vertices[], int& poz) {
 	Vertices[++poz] = 0.0f;
 	Vertices[++poz] = 1.0f;
 }
+
+int Plant::getPrice() const {
+	switch (this->color)
+	{
+	case Colors::MAGENTA:
+		return 1;
+	case Colors::YELLOW:
+		return 2;
+	case Colors::CYAN:
+		return 3;
+	case Colors::ORANGE:
+		return 4;
+	default:
+		return 1;
+	}
+}
