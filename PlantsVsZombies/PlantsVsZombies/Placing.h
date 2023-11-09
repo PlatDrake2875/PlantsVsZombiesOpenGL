@@ -12,7 +12,7 @@ class Placing : public Plant
 public:
 	Placing(GLuint pressedNumber, Plant plant);
 	void setPressedNumber(GLuint pressedNumber);
-	static void addPlant(Plant* p);
+	static bool addPlant(Plant* p);
 	static void addPlants(std::list<Plant*> plants);
 	static void drawAllPlants();
 	~Placing();

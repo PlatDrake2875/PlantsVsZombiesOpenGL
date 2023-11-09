@@ -13,8 +13,10 @@ Plant::Plant(float xCenter, float yCenter, float zCenter) :
 
 
 void Plant::draw() {
+	// Construim matricea de translatie a plantei (de la pozitia generica la pozitia specifica)
 	glm::mat4 translateMatrix = glm::translate(this->getPosition());
 	glm::mat4 myMatrix = Shared::resizeMatrix * translateMatrix;
+	// Transmitem catre shader matricea de translatie si culoarea cu care sa fie desenata planta
 	glUniformMatrix4fv(Shared::myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
 	glUniform1i(Shared::codColLocation, this->getColor());
 	//glDrawElements(GL_POLYGON, nrPoints, GL_UNSIGNED_INT, (void*)(offset * sizeof(GLuint)));
@@ -89,4 +91,10 @@ int Plant::getPrice() const {
 	default:
 		return 1;
 	}
+}
+
+bool Plant::isActive() const
+{
+	// O planta este activa daca se afla in interiorul ecranului
+	return this->getPosition().x > 0.f && this->getPosition().y > 0.f;
 }

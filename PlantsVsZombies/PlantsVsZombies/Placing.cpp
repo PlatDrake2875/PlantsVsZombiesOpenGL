@@ -12,15 +12,17 @@ void Placing::setPressedNumber(GLuint pressedNumber) {
 	this->pressedNumber = pressedNumber;
 }
 
-void Placing::addPlant(Plant* p) {
+bool Placing::addPlant(Plant* p) {
 	auto it = Shared::usedSquares.begin();
 	while (it != Shared::usedSquares.end()) {
 		if (it->x == p->getPosition().x && it->y == p->getPosition().y) {
-			return;
+			std::cout << "Plant already exists here! " << it->x << ' ' << it->y << std::endl;
+			return false;
 		}
 		++it;
 	}
 	Shared::plants.push_back(p);
+	return true;
 }
 
 void Placing::addPlants(std::list<Plant*> plants) {

@@ -5,6 +5,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "Colors.h"
 #include <GL/glew.h>  
+
+// Clasa Generica din care mostenesc Plant si Zombie
 class GenericNPC
 {
 	glm::vec3 position;
@@ -19,7 +21,9 @@ public:
 	float getHealth() const;
 	glm::vec3 getPosition() const;
 	int getColor() const;
+	// Functie care deseneaza obiectul si este definita in clasele Plant si Zombie
 	virtual void draw() = 0;
+	// Functie care seteaza coordonatele varfurilor pentru obiect si este definita in clasele Plant si Zombie
 	virtual void loadVertices(GLfloat Vertices[], int& poz) = 0;
 	virtual ~GenericNPC() = 0;
 };

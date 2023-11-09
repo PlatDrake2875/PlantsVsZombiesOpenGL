@@ -38,8 +38,6 @@ const int NMax = 100000;
 int codCol;
 //	Variabile pentru proiectia ortogonala;
 float xMin = 0.0f, xMax = 1000.0f, yMin = 0.0f, yMax = 600.0f;
-//	Variabile pentru deplasarea pe axa Ox si pentru rotatie;
-float i = 0.0, alpha = 0.0, step = 0.3, beta = 0.002, angle = 0;
 Collisions collision_handler;
 POINT mousePosition;
 GLuint pressedNumber = 0;
@@ -60,44 +58,10 @@ void setSquaresCenters() {
 	}
 }
 
-//	Functie pentru afisarea matricei de transformare;
-/*void DisplayMatrix()
-{
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-			cout << myMatrix[i][j] << "  ";
-		cout << endl;
-	};
-	cout << "\n";
-};*/
+// Muta toate obiectle dinamice (plante plasate de utilizator, zombie, gloante) si le sterge pe cele care nu mai sunt active
+void moveAllDynamicObjects() {
 
-//	Schimba sensul animatiei spre dreapta;
-void MoveRight(void)
-{
-	i = i + alpha;
-	if (i > 350.0)			//	Se asigura deplasarea stanga-dreapta pe Ox in limitele ecranului,
-		alpha = -step;		//	mai intai efectuandu-se deplasarea spre DREAPTA;
-	else if (i < -350.0)
-		alpha = step;
-	angle = angle - beta;	//	Se actualizeaza unghiul de rotatie constant (mentine orbitarea);
-	glutPostRedisplay();	//	Forteza redesenarea scenei;
-}
-
-//	Schimba sensul animatiei spre stanga;
-void MoveLeft(void)
-{
-	i = i + alpha;
-	if (i < -350.0)			//	Se asigura deplasarea stanga-dreapta pe Ox in limitele ecranului,
-		alpha = step;		//	mai intai efectuandu-se deplasarea spre STANGA;
-	else if (i > 350.0)
-		alpha = -step;
-	angle = angle + beta;	//	Se actualizeaza unghiul de rotatie constant (mentine orbitarea);
-	glutPostRedisplay();	//	Forteza redesenarea scenei;
-}
-
-void moveAll() {
-	// move all the zombies
+	// Deplaseaza toti zombie
 	auto it = Shared::zombies.begin();
 	while (it != Shared::zombies.end()) {
 		(*it)->move();
@@ -112,6 +76,7 @@ void moveAll() {
 			++it;
 	}
 
+	// Deplaseaza toate gloantele
 	auto it1 = Shared::bullets.begin();
 	while (it1 != Shared::bullets.end()) {
 		(*it1)->move();
@@ -123,24 +88,39 @@ void moveAll() {
 			++it1;
 	}
 
+	// Verificam daca sunt plante mutate in afara scenei, caz in care trebuie sterse
+	auto it2 = Shared::plants.begin();
+	while (it2 != Shared::plants.end()) {
+		if (!(*it2)->isActive()) {
+			delete* it2;
+			it2 = Shared::plants.erase(it2);
+		}
+		else
+			++it2;
+	}
+
 	glutPostRedisplay();
 }
 
-void drawAll() {
+// Deseneaza toate obiectele dinamice la pozitiile lor curente (plante plasate de utilizator, zombie, gloante)
+void drawAllDynamicObjects() {
 	for (auto zombie : Shared::zombies)
 		zombie->draw();
 
 	for (auto bullet : Shared::bullets)
 		bullet->draw();
+
+	for(auto plant : Shared::plants)
+		plant->draw();
 }
 
 bool isMousePressed = false;
 
-//	Functie ce modifica deplasarea dreptunghiurilor in functie de apasarea butoanelor de pe mouse;
+// Functia pentru folosirea mouse-ului (se preiau coordonatele mouse-ului la apasarea butonului stang) si se seteaza flag-ul isMousePressed
 void UseMouse(int button, int state, int x, int y)
 {
 	switch (button) {
-	case GLUT_LEFT_BUTTON:			//	CLICK stanga => dreptunghiurile se misca spre stanga;
+	case GLUT_LEFT_BUTTON:			
 		if (state == GLUT_DOWN) {
 			mousePosition.x = x;
 			mousePosition.y = 600 - y;
@@ -151,10 +131,10 @@ void UseMouse(int button, int state, int x, int y)
 	}
 }
 
-
+// Functia pentru folosirea tastaturii (se preiau tastele apasate) si se seteaza pressedNumber in functie de tasta apasata (1, 2, 3 sau 4)
 void ProcessPlacingKeys(unsigned char key, int x, int y)
 {
-	switch (key) {		//	Procesarea tastelor 'l' si 'r' modifica unghiul de rotire al patratului;
+	switch (key) {		
 	case '1':
 		pressedNumber = 1;
 		break;
@@ -173,19 +153,15 @@ void ProcessPlacingKeys(unsigned char key, int x, int y)
 	}
 }
 
-//  Crearea si compilarea obiectelor de tip shader;
-//	Trebuie sa fie in acelasi director cu proiectul actual;
-//  Shaderul de varfuri / Vertex shader - afecteaza geometria scenei;
-//  Shaderul de fragment / Fragment shader - afecteaza culoarea pixelilor;
+
 void CreateShaders(void)
 {
 	ProgramId = LoadShaders("main.vert", "main.frag");
 	glUseProgram(ProgramId);
 }
 
-// Desenam o stea cu 5 colturi
+// Adaugam coordonatele unei stele in vectorul Vertices
 // x, y - coordonatele stanga jos ale chenarului in care se va desena steaua
-// actualizam pozitia in vectorul Vertices
 void star(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 2.2f) {
 	Vertices[++poz] = x + 6.f * scale;
 	Vertices[++poz] = y + 3.f * scale;
@@ -239,7 +215,7 @@ void star(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 2.
 	Vertices[++poz] = 1.0f;
 }
 
-// Desenam un patrat
+// Adaugam coordonatele unui patrat in vectorul Vertices
 void patrat(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 1.0f)
 {
 	// Coltul stanga jos
@@ -267,7 +243,7 @@ void patrat(GLfloat Vertices[], int& poz, GLfloat x, GLfloat y, GLfloat scale = 
 	Vertices[++poz] = 1.0f;
 }
 
-// Desenam un dreptunghi
+// Adaugam coordonatele unui dreptunghi in vectorul Vertices
 void rectangle(GLfloat Vertices[], int& poz)
 {
 
@@ -297,18 +273,15 @@ void rectangle(GLfloat Vertices[], int& poz)
 }
 
 
-//  Se initializeaza
-//  un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
-//  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
-//  Coordonatele varfurilor;
 GLfloat Vertices[NMax] = { 0 };
 void CreateVBO(void)
 {
-	// Culorile axelor
+	// Colorarea am facut-o in shader pentru toate obiectele
 	GLfloat Colors[1] = { 0 };
 
 	int poz = -1;
 
+	// Se adauga coordonatele pentru cele 9 "campuri" in care vor fi plasate plantele
 	float xBL = 100.0f, yBL = 25.0f, offset = 25.0f;
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
@@ -316,9 +289,10 @@ void CreateVBO(void)
 		}
 	}
 
+	// Se adauga coordonatele pentru linia de baza (linia rosie)
 	rectangle(Vertices, poz);
 
-	// Kenarele pentru plante
+	// Chenarele pentru plantele de sus
 	yBL = 475.f;
 	for (int i = 0; i < 4;i++) {
 		patrat(Vertices, poz, xBL + i * (100 + offset), yBL);
@@ -360,18 +334,18 @@ void CreateVBO(void)
 	for (int i = 0; i < 6;i++)
 		star(Vertices, poz, x_stars + width_stars * i, y_stars);
 
-	// Asezarea obiectelor dinamice in Vertices
+	// Asezarea obiectelor dinamice "generice" in Vertices
 	// Planta generica - 7 puncte
 	Plant::setOffset((poz + 1) / 4);
-	Plant(Colors::BLACK, -50.f, -50.f).loadVertices(Vertices, poz); // planta centrata in (0, 0) ca sa o pot pune unde vreau din translatii
+	Plant(Colors::BLACK, -50.f, -50.f).loadVertices(Vertices, poz); // planta "generica" centrata in (0, 0) pentru transformari usoare
 
 	// Zombie - 12 puncte (mai intai partea exterioara, apoi cea interioara
 	Zombie::setOffset((poz + 1) / 4);
-	Zombie().loadVertices(Vertices, poz);
+	Zombie().loadVertices(Vertices, poz); // zombie "generic" centrat in (0, 0) pentru transformari usoare
 
 	// Bullet - 10 puncte (o stea)
 	Bullet::setOffset((poz + 1) / 4);
-	star(Vertices, poz, -30.f, -30.f, 5.f);
+	star(Vertices, poz, -30.f, -30.f, 5.f); // bullet "generic" centrat in (0, 0) pentru transformari usoare
 
 
 	//  Se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO;
@@ -436,6 +410,7 @@ void Initialize(void)
 	Shared::myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
 }
 
+// Se preia culoarea plantei in functie de tasta apasata
 int getPlantColor(int pressedNumber) {
 	switch (pressedNumber) {
 	case 1:
@@ -471,9 +446,10 @@ void RenderFunction(void)
 	Shared::render_duration = current_time - last_render_time;
 	last_render_time = current_time;
 
-
+	// Construim matricea de decupare a cadrului
 	Shared::resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);
 
+	// Desenam elementele statice din scena
 	myMatrix = Shared::resizeMatrix;
 	codCol = FIELD_GREEN;
 	glUniformMatrix4fv(Shared::myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
@@ -489,10 +465,11 @@ void RenderFunction(void)
 	glUniform1i(Shared::codColLocation, codCol);
 	glDrawArrays(GL_POLYGON, 36, 4);
 
-	// desenam kenarele pentru plante
+	// desenam chenarele pentru plante
 	glLineWidth(1.f);
 	codCol = WHITE;
 	glUniform1i(Shared::codColLocation, codCol);
+	// In functie de numarul apasat se face highlight chenarului asociat
 	switch (pressedNumber) {
 	case 1:
 		glLineWidth(2.5f);
@@ -550,8 +527,9 @@ void RenderFunction(void)
 	for (int i = 0; i < 10;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
 
-
+	// Specificam sa fie folosita functia ProcessPlacingKeys pentru hadling-ul tastelor
 	glutKeyboardFunc(ProcessPlacingKeys);
+	// Specificam sa fie folosita functia UseMouse pentru hadling-ul mouse-ului
 	glutMouseFunc(UseMouse);
 	setSquaresCenters();
 
@@ -560,16 +538,18 @@ void RenderFunction(void)
 	auto it = Shared::squares.begin();
 
 	while (it != Shared::squares.end()) {
-		if (isMousePressed && mousePosition.x >= (*it).x - 50.f && mousePosition.x <= (*it).x + 50.f && mousePosition.y >= (*it).y - 50.f && mousePosition.y <= (*it).y + 50.f) {
+		if (plantColor != Colors::DEFAULT && isMousePressed && mousePosition.x >= (*it).x - 50.f && mousePosition.x <= (*it).x + 50.f && mousePosition.y >= (*it).y - 50.f && mousePosition.y <= (*it).y + 50.f) {
 			if (money >= Plant(plantColor, 0.f, 0.f).getPrice())
 			{
 				Plant* pl = new Plant(plantColor, (*it).x, (*it).y);
-				money -= float(pl->getPrice());
-				nr_plante++;
 				
-				Placing::addPlant(pl);
-				Shared::usedSquares.push_back(*it);
-
+				bool placedSuccessful = Placing::addPlant(pl);
+				if (placedSuccessful) {
+					Shared::usedSquares.push_back(*it);
+					money -= float(pl->getPrice());
+					nr_plante++;
+				}
+				
 				isMousePressed = false;
 			}
 		}
@@ -590,18 +570,7 @@ void RenderFunction(void)
 	for (int i = 0; i < nr_stars;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
 
-	auto it2 = Shared::plants.begin();
 
-	while (it2 != Shared::plants.end()) {
-		Plant p = **it2;
-		//(*it2)->toString();
-		if (p.getColor() > 0)
-			p.draw();
-		++it2;
-	}
-
-	//Bullet b(YELLOW, 0.f, 0.f);
-	//b.draw();
 
 	// Zombies spawn
 	if (current_time - last_zombie_spawn_time > 3000)
@@ -624,11 +593,12 @@ void RenderFunction(void)
 	collision_handler.ZombieHome();
 	collision_handler.ZombieBullet();
 	collision_handler.ZombiePlant();
-	drawAll();
+	drawAllDynamicObjects();
 
 	glutSwapBuffers();	//	Inlocuieste imaginea deseneata in fereastra cu cea randata; 
 	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
 
+	// Pentru a ramane scena deschisa dupa ce jocul s-a terminat
 	if (Shared::lives <= 0)
 	{
 		int x;
@@ -639,6 +609,7 @@ void RenderFunction(void)
 //	Punctul de intrare in program, se ruleaza rutina OpenGL;
 int main(int argc, char* argv[])
 {
+	srand(time(NULL));
 	// Stabilim dimensiunile ferestrei
 	Shared::winWidth = 1000.f;
 	Shared::winHeight = 600.f;
@@ -654,16 +625,10 @@ int main(int argc, char* argv[])
 
 	glewInit();
 
-	Initialize();						//  Setarea parametrilor necesari pentru fereastra de vizualizare; 
-
-	// TESTING PURPOSES
-	//Zombie* z = new Zombie(YELLOW, 1100.f, 75.f);
-	//Shared::zombies.push_back(z);
-	//Bullet* b = new Bullet(YELLOW, 100.f, 75.f);
-	//Shared::bullets.push_back(b);
+	Initialize();						//  Setarea parametrilor necesari pentru fereastra de vizualizare;
 
 	glutDisplayFunc(RenderFunction);	//  Desenarea scenei in fereastra;
-	glutIdleFunc(moveAll);
+	glutIdleFunc(moveAllDynamicObjects);
 	glutMouseFunc(UseMouse);			//	Activarea utilizarii mouseului;
 	glutCloseFunc(Cleanup);				//  Eliberarea resurselor alocate de program;
 

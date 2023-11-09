@@ -10,6 +10,7 @@ struct square {
 	float x, y;
 };
 
+// Clasa pentru variabilele globale care sunt folosite in mai multe clase
 class Shared
 {
 public:

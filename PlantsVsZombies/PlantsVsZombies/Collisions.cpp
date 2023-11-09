@@ -38,10 +38,18 @@ void Collisions::ZombiePlant()
 		for (auto& zombie : Shared::zombies)
 		{
 			if (zombie->getPosition().x < plant->getPosition().x
+				&& plant->getPosition().x - zombie->getPosition().x < 1.f
 				&& abs(zombie->getPosition().y - plant->getPosition().y) < 50)
 			{
 				//Shared::plants.erase(std::remove(Shared::plants.begin(), Shared::plants.end(), plant), Shared::plants.end());
-
+				auto it = Shared::usedSquares.begin();
+				while (it != Shared::usedSquares.end()) {
+					if (it->x == plant->getPosition().x && it->y == plant->getPosition().y) {
+						Shared::usedSquares.erase(it);
+						break;
+					}
+					++it;
+				}	
 				glm::vec3 outside(glm::vec3(-200.0f, -200.0f, 0.0f));
 				plant->setPosition(outside);
 			}

@@ -8,8 +8,24 @@
   3 File(s) copied
   C:SOIL.dll
   1 File(s) copied
-  Collisions.cpp
-  PlantsVsZombies.vcxproj -> C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\x64\Debug\PlantsVsZombies.exe
+  Bullet.cpp
+  Colors.h
+  GenericNPC.cpp
+  Placing.cpp
+  Plant.cpp
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\Plant.cpp(12,13): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+  Shared.cpp
+  Zombie.cpp
+  main.cpp
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(443,22): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(446,41): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(447,21): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(566,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(612,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(620,47): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
+C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(620,29): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
+  Generating Code...
+  PlantsVsZombies.vcxproj -> C:\Users\George Radu\Desktop\Facultate\An_III\Sem_1\Grafica\Proiecte\PlantsVsZombiesOpenGL\PlantsVsZombies\x64\Debug\PlantsVsZombies.exe
   0 File(s) copied
   0 File(s) copied
   0 File(s) copied
