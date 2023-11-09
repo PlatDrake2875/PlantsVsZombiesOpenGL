@@ -18,6 +18,7 @@ class Zombie : public GenericNPC
 	static int interiorColor;
 	static float step;
 	float currentXPosition;
+	bool killer = false;
 public:
 	// xCenter, yCenter, zCenter - coordonatele centrului obiectului
 	Zombie(int color, float xCenter, float yCenter, float zCenter = 0.f);
@@ -28,6 +29,8 @@ public:
 	void loadVertices(GLfloat Vertices[], int& poz) override;
 	void move();
 	bool isActive() const;
+	void setKiller();
+	bool isKiller();
 	~Zombie();
 
 };

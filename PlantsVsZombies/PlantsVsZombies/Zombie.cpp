@@ -66,3 +66,11 @@ void Zombie::loadVertices(GLfloat Vertices[], int& poz) {
 		Vertices[++poz] = 1.0f;
 	}
 }
+
+void Zombie::setKiller() {
+	this->killer = true;
+}
+
+bool Zombie::isKiller() {
+	return this->killer;
+}

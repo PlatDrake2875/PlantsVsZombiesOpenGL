@@ -26,6 +26,7 @@ public:
 	static std::list<Zombie*> zombies;
 	static std::list<Bullet*> bullets;
 	static int render_duration; // in miliseconds
+
 };
 
 

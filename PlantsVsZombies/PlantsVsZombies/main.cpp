@@ -47,8 +47,6 @@ GLuint pressedNumber = 0;
 time_t last_zombie_spawn_time = 0, last_bullets_spawn_time = 0;
 int last_render_time = 0;
 
-int player_lives = 3;
-
 float money = 6.0f;
 float money_per_milisecond = 0.001f;
 int life_offset = 0;
@@ -104,6 +102,9 @@ void moveAll() {
 	while (it != Shared::zombies.end()) {
 		(*it)->move();
 		if (!(*it)->isActive()) {
+			if ((*it)->isKiller())
+				Shared::lives--;
+				
 			delete* it;
 			it = Shared::zombies.erase(it);
 		}
@@ -521,9 +522,9 @@ void RenderFunction(void)
 	// desenam vietile
 	codCol = RED;
 	glUniform1i(Shared::codColLocation, codCol);
-	glDrawArrays(GL_POLYGON, 56, 4);
-	glDrawArrays(GL_POLYGON, 60, 4);
-	glDrawArrays(GL_POLYGON, 64, 4);
+	for(int i=0;i<Shared::lives;i++)
+		glDrawArrays(GL_POLYGON, 56 + i * 4, 4);
+
 
 	// desenam plantele din chenare
 	codCol = MAGENTA;
@@ -620,12 +621,19 @@ void RenderFunction(void)
 		last_bullets_spawn_time = current_time;
 	}
 
+	collision_handler.ZombieHome();
 	collision_handler.ZombieBullet();
 	collision_handler.ZombiePlant();
 	drawAll();
 
 	glutSwapBuffers();	//	Inlocuieste imaginea deseneata in fereastra cu cea randata; 
 	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
+
+	if (Shared::lives <= 0)
+	{
+		int x;
+		std::cin >> x;
+	}
 }
 
 //	Punctul de intrare in program, se ruleaza rutina OpenGL;

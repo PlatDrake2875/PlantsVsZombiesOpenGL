@@ -8,15 +8,7 @@
   3 File(s) copied
   C:SOIL.dll
   1 File(s) copied
-  main.cpp
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(42,34): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(42,46): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(467,22): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(470,41): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(471,21): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(585,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(641,47): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
-C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\PlantsVsZombies\main.cpp(641,29): warning C4244: 'argument': conversion from 'GLfloat' to 'int', possible loss of data
+  Collisions.cpp
   PlantsVsZombies.vcxproj -> C:\Users\stoic\source\repos\PlantsVsZombiesOpenGL\PlantsVsZombies\x64\Debug\PlantsVsZombies.exe
   0 File(s) copied
   0 File(s) copied
