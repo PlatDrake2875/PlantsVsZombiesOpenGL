@@ -10,5 +10,7 @@ class Collisions {
 
 public:
 	void ZombieBullet();
+	void ZombiePlant();
+	void ZombieHome();
 };
 

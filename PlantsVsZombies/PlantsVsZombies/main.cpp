@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <GL/glew.h>        //  Definește prototipurile functiilor OpenGL si constantele necesare pentru programarea OpenGL moderna; 
 #include <GL/freeglut.h>    //	Include functii pentru: 
+#include <ctime>
+#include <chrono>
 //	- gestionarea ferestrelor si evenimentelor de tastatura si mouse, 
 //  - desenarea de primitive grafice precum dreptunghiuri, cercuri sau linii, 
 //  - crearea de meniuri si submeniuri;
@@ -42,6 +44,13 @@ Collisions collision_handler;
 POINT mousePosition;
 GLuint pressedNumber = 0;
 
+time_t last_zombie_spawn_time = 0, last_bullets_spawn_time = 0;
+int last_render_time = 0;
+
+float money = 6.0f;
+float money_per_milisecond = 0.001f;
+int life_offset = 0;
+int nr_plante = 0;
 
 void setSquaresCenters() {
 	Shared::squares.clear();
@@ -52,7 +61,7 @@ void setSquaresCenters() {
 }
 
 //	Functie pentru afisarea matricei de transformare;
-void DisplayMatrix()
+/*void DisplayMatrix()
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -61,7 +70,7 @@ void DisplayMatrix()
 		cout << endl;
 	};
 	cout << "\n";
-};
+};*/
 
 //	Schimba sensul animatiei spre dreapta;
 void MoveRight(void)
@@ -92,8 +101,10 @@ void moveAll() {
 	auto it = Shared::zombies.begin();
 	while (it != Shared::zombies.end()) {
 		(*it)->move();
-		//std::cout << (*it)->getPosition().y << '\n';
 		if (!(*it)->isActive()) {
+			if ((*it)->isKiller())
+				Shared::lives--;
+				
 			delete* it;
 			it = Shared::zombies.erase(it);
 		}
@@ -289,11 +300,10 @@ void rectangle(GLfloat Vertices[], int& poz)
 //  Se initializeaza
 //  un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
+//  Coordonatele varfurilor;
+GLfloat Vertices[NMax] = { 0 };
 void CreateVBO(void)
 {
-	//  Coordonatele varfurilor;
-	GLfloat Vertices[NMax] = { 0 };
-
 	// Culorile axelor
 	GLfloat Colors[1] = { 0 };
 
@@ -346,6 +356,7 @@ void CreateVBO(void)
 	// stelele - banii acumulati
 	GLfloat x_stars = 625.f;
 	y_stars = 470.f;
+	life_offset = ((poz + 1) / 4);
 	for (int i = 0; i < 6;i++)
 		star(Vertices, poz, x_stars + width_stars * i, y_stars);
 
@@ -445,6 +456,22 @@ void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
 
+	// Se reseteaza timer-ul
+	auto current_time_now = std::chrono::system_clock::now();
+	auto ms = std::chrono::time_point_cast<std::chrono::milliseconds>(current_time_now);
+
+	// Extrage timpul curent în milisecunde
+	std::chrono::milliseconds timestamp = ms.time_since_epoch();
+	long long current_time = timestamp.count(); // timpul curent in milisecounde
+
+	if (last_render_time == 0)
+		last_render_time = current_time;
+
+	// Se calculeaza diferenta de timp dintre ultimul frame si cel curent
+	Shared::render_duration = current_time - last_render_time;
+	last_render_time = current_time;
+
+
 	Shared::resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);
 
 	myMatrix = Shared::resizeMatrix;
@@ -495,9 +522,9 @@ void RenderFunction(void)
 	// desenam vietile
 	codCol = RED;
 	glUniform1i(Shared::codColLocation, codCol);
-	glDrawArrays(GL_POLYGON, 56, 4);
-	glDrawArrays(GL_POLYGON, 60, 4);
-	glDrawArrays(GL_POLYGON, 64, 4);
+	for(int i=0;i<Shared::lives;i++)
+		glDrawArrays(GL_POLYGON, 56 + i * 4, 4);
+
 
 	// desenam plantele din chenare
 	codCol = MAGENTA;
@@ -523,48 +550,51 @@ void RenderFunction(void)
 	for (int i = 0; i < 10;i++)
 		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
 
-	// desenam stelele - banii acumulati
-	poz = 196;
-	for (int i = 0; i < 6;i++)
-		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
-
-
 
 	glutKeyboardFunc(ProcessPlacingKeys);
-
 	glutMouseFunc(UseMouse);
-
 	setSquaresCenters();
 
 	int plantColor = getPlantColor(pressedNumber);
 
-	cout << "Plant color: " << plantColor << '\n';
-
 	auto it = Shared::squares.begin();
 
 	while (it != Shared::squares.end()) {
-		//std::cout << (*it).x << " " << (*it).y << '\n';
 		if (isMousePressed && mousePosition.x >= (*it).x - 50.f && mousePosition.x <= (*it).x + 50.f && mousePosition.y >= (*it).y - 50.f && mousePosition.y <= (*it).y + 50.f) {
-			//std::cout << "Pressed " << pressedNumber << '\n';
-			//cout << "Mouse position: " << mousePosition.x << " " << mousePosition.y << '\n';
-			std::cout << (*it).x << " " << (*it).y << '\n';
+			if (money >= Plant(plantColor, 0.f, 0.f).getPrice())
+			{
+				Plant* pl = new Plant(plantColor, (*it).x, (*it).y);
+				money -= float(pl->getPrice());
+				nr_plante++;
+				
+				Placing::addPlant(pl);
+				Shared::usedSquares.push_back(*it);
 
-			Plant* pl = new Plant(plantColor, (*it).x, (*it).y);
-			//pl.draw();
-			Placing::addPlant(pl);
-			Shared::usedSquares.push_back(*it);
-			//pressedNumber = 0;
+				isMousePressed = false;
+			}
 		}
 		++it;
 	}
 
-	auto it2 = Shared::plants.begin();
+	// actualizam banii
+	money += money_per_milisecond * float(Shared::render_duration);
+	if (money < 0.f)
+		money = 0.f;
+	if (money > 6.f)
+		money = 6.f;
 
-	cout << "Plants size: " << Shared::plants.size() << '\n';
+	int nr_stars = floor(money);
+
+	// desenam stelele - banii acumulati
+	poz = 196;
+	for (int i = 0; i < nr_stars;i++)
+		glDrawArrays(GL_POLYGON, poz + 10 * i, 10);
+
+	auto it2 = Shared::plants.begin();
 
 	while (it2 != Shared::plants.end()) {
 		Plant p = **it2;
-		(*it2)->toString();
+		//(*it2)->toString();
 		if (p.getColor() > 0)
 			p.draw();
 		++it2;
@@ -573,15 +603,37 @@ void RenderFunction(void)
 	//Bullet b(YELLOW, 0.f, 0.f);
 	//b.draw();
 
-	// Test Zombie spawn
-	//Zombie z1(YELLOW, 500.f, 75.f);
-	//z1.draw();
+	// Zombies spawn
+	if (current_time - last_zombie_spawn_time > 3000)
+	{
+		int color= rand() % 4 + 7;
+		int line = rand() %3;
+		Shared::zombies.push_back(new Zombie(color, 1100.f, 75.f + line * 125.f));
+		last_zombie_spawn_time = current_time;
+	}
 
+	// Bullets spawn
+	if (current_time - last_bullets_spawn_time > 1000) {
+		for (auto plant : Shared::plants) 
+			if (plant->getColor() > 0) 
+				Shared::bullets.push_back(new Bullet(plant->getColor(), plant->getPosition().x + 50.f, plant->getPosition().y));
+
+		last_bullets_spawn_time = current_time;
+	}
+
+	collision_handler.ZombieHome();
 	collision_handler.ZombieBullet();
+	collision_handler.ZombiePlant();
 	drawAll();
 
 	glutSwapBuffers();	//	Inlocuieste imaginea deseneata in fereastra cu cea randata; 
 	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
+
+	if (Shared::lives <= 0)
+	{
+		int x;
+		std::cin >> x;
+	}
 }
 
 //	Punctul de intrare in program, se ruleaza rutina OpenGL;
@@ -605,10 +657,10 @@ int main(int argc, char* argv[])
 	Initialize();						//  Setarea parametrilor necesari pentru fereastra de vizualizare; 
 
 	// TESTING PURPOSES
-	Zombie* z = new Zombie(YELLOW, 1100.f, 75.f);
-	Shared::zombies.push_back(z);
-	Bullet* b = new Bullet(YELLOW, 100.f, 75.f);
-	Shared::bullets.push_back(b);
+	//Zombie* z = new Zombie(YELLOW, 1100.f, 75.f);
+	//Shared::zombies.push_back(z);
+	//Bullet* b = new Bullet(YELLOW, 100.f, 75.f);
+	//Shared::bullets.push_back(b);
 
 	glutDisplayFunc(RenderFunction);	//  Desenarea scenei in fereastra;
 	glutIdleFunc(moveAll);

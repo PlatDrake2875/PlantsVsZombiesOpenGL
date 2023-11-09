@@ -14,7 +14,7 @@ GLuint Zombie::offset = 0;
 
 int Zombie::interiorColor = DARK_GREEN;
 
-float Zombie::step = 0.1f;
+float Zombie::step = 0.05f;
 
 void Zombie::draw() {
 	glm::mat4 translateMatrix = glm::translate(this->getPosition());
@@ -27,7 +27,7 @@ void Zombie::draw() {
 }
 
 void Zombie::move() {
-	this->currentXPosition -= step;
+	this->currentXPosition -= step*Shared::render_duration;
 	glm::vec3 newPosition = glm::vec3(this->currentXPosition, this->getPosition().y, this->getPosition().z);
 	this->setPosition(newPosition);
 }
@@ -65,4 +65,12 @@ void Zombie::loadVertices(GLfloat Vertices[], int& poz) {
 		Vertices[++poz] = 1.0f; // 1.0f pentru a fi desenat deasupra
 		Vertices[++poz] = 1.0f;
 	}
+}
+
+void Zombie::setKiller() {
+	this->killer = true;
+}
+
+bool Zombie::isKiller() {
+	return this->killer;
 }

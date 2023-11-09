@@ -5,7 +5,7 @@ GLuint Bullet::nrPoints = 10;
 
 GLuint Bullet::offset = 0;
 
-float Bullet::step = 0.1f;
+float Bullet::step = 0.3f;
 
 float Bullet::angleStep = -0.001f;
 
@@ -30,7 +30,7 @@ void Bullet::draw() {
 }
 
 void Bullet::move() {
-	this->currentXPosition += this->step;
+	this->currentXPosition += this->step * Shared::render_duration;
 	this->currentRotation += this->angleStep;
 	glm::vec3 newPosition = glm::vec3(this->currentXPosition, this->getPosition().y, this->getPosition().z);
 	this->setPosition(newPosition);
